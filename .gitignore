@@ -1,0 +1,16 @@
+# ESP-IDF generated build artifacts
+build/
+
+# ESP-IDF config backup
+sdkconfig.old
+
+# Python generated files
+__pycache__/
+*.pyc
+
+# OS/editor temporary files
+.DS_Store
+Thumbs.db
+
+# VS Code machine-specific ESP-IDF setup
+.vscode/settings.json
