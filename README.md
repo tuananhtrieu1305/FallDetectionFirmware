@@ -1,53 +1,78 @@
-| Supported Targets | ESP32 | ESP32-C2 | ESP32-C3 | ESP32-C5 | ESP32-C6 | ESP32-C61 | ESP32-H2 | ESP32-H21 | ESP32-H4 | ESP32-P4 | ESP32-S2 | ESP32-S3 | Linux |
-| ----------------- | ----- | -------- | -------- | -------- | -------- | --------- | -------- | --------- | -------- | -------- | -------- | -------- | ----- |
+﻿# Fall Detection Firmware
 
-# Hello World Example
+Firmware for the wearable IoT fall-detection project.
 
-Starts a FreeRTOS task to print "Hello World".
+## Hardware baseline
 
-(See the README.md file in the upper level 'examples' directory for more information about examples.)
+- MCU: ESP32-S3 N16R8
+- Flash: 16 MB
+- PSRAM: 8 MB
+- Development board: 44-pin ESP32-S3 board
+- USB-to-UART: CH343
+- Wearable target position: waist / abdomen
 
-## How to use example
+## Development environment
 
-Follow detailed instructions provided specifically for this example.
+- OS: Windows 11
+- Framework: ESP-IDF v5.5.5
+- Target: esp32s3
+- IDE: Visual Studio Code + Espressif ESP-IDF extension
+- ESP-IDF installation: managed by Espressif Installation Manager
 
-Select the instructions depending on Espressif chip installed on your development board:
+Before running ESP-IDF commands in VS Code, use:
 
-- [ESP32 Getting Started Guide](https://docs.espressif.com/projects/esp-idf/en/stable/get-started/index.html)
-- [ESP32-S2 Getting Started Guide](https://docs.espressif.com/projects/esp-idf/en/latest/esp32s2/get-started/index.html)
+    Ctrl + Shift + P
+    ESP-IDF: Open ESP-IDF Terminal
 
+## Phase 0 verified
 
-## Example folder contents
+The following bring-up checks have passed on the physical board:
 
-The project **hello_world** contains one source file in C language [hello_world_main.c](main/hello_world_main.c). The file is located in folder [main](main).
+- ESP32-S3 detected successfully
+- Silicon revision v0.2
+- 16 MB external flash detected
+- 8 MB PSRAM detected by esptool
+- Build succeeds with ESP-IDF v5.5.5
+- Firmware flashes successfully through the CH343 COM interface
+- Serial monitor works at 115200 baud
+- Software reboot works
+- Physical reset works repeatedly
+- Baseline firmware runs continuously and outputs a heartbeat
 
-ESP-IDF projects are built using CMake. The project build configuration is contained in `CMakeLists.txt` files that provide set of directives and instructions describing the project's source files and targets (executable, library, or both).
+PSRAM is physically present but intentionally not enabled for application use during Phase 0.
 
-Below is short explanation of remaining files in the project folder.
+## Build
 
-```
-├── CMakeLists.txt
-├── pytest_hello_world.py      Python script used for automated testing
-├── main
-│   ├── CMakeLists.txt
-│   └── hello_world_main.c
-└── README.md                  This is the file you are currently reading
-```
+Run:
 
-For more information on structure and contents of ESP-IDF projects, please refer to Section [Build System](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/build-system.html) of the ESP-IDF Programming Guide.
+    idf.py build
 
-## Troubleshooting
+## Flash
 
-* Program upload failure
+Replace PORT with the COM port assigned by Windows:
 
-    * Hardware connection is not correct: run `idf.py -p PORT monitor`, and reboot your board to see if there are any output logs.
-    * The baud rate for downloading is too high: lower your baud rate in the `menuconfig` menu, and try again.
+    idf.py -p PORT flash
 
-## Technical support and feedback
+Example on the current development machine:
 
-Please use the following feedback channels:
+    idf.py -p COM5 flash
 
-* For technical queries, go to the [esp32.com](https://esp32.com/) forum
-* For a feature request or bug report, create a [GitHub issue](https://github.com/espressif/esp-idf/issues)
+## Monitor
 
-We will get back to you as soon as possible.
+Run:
+
+    idf.py -p PORT monitor
+
+Exit the monitor with:
+
+    Ctrl + ]
+
+## Current firmware behavior
+
+After boot, the firmware prints board and firmware information and then outputs:
+
+    Heartbeat: firmware running
+
+approximately every 5 seconds.
+
+No sensors, GNSS, LTE modem, buzzer, vibration motor, button, or Edge AI are initialized in Phase 0.
