@@ -12,4 +12,5 @@ idf_component_register(
         esp_driver_ledc
         esp_timer
         bmi270
+        bmp3
 )

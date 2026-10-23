@@ -1,5 +1,7 @@
 #include <stdint.h>
+#include <stdbool.h>
 #include <string.h>
+#include <math.h>
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -11,42 +13,60 @@
 #include "esp_rom_sys.h"
 
 #include "bmi270.h"
+#include "bmp3.h"
 
 #include "alert_manager.h"
 
-
 /* =========================================================
- * BMI270 hardware configuration
+ * Shared I2C bus
  * ========================================================= */
 
-#define BMI270_SDA_GPIO        8
-#define BMI270_SCL_GPIO        9
+#define I2C_SDA_GPIO           8
+#define I2C_SCL_GPIO           9
+#define I2C_PORT               I2C_NUM_0
+#define I2C_FREQ_HZ            100000
 
-#define BMI270_I2C_PORT        I2C_NUM_0
+/* =========================================================
+ * BMI270
+ * ========================================================= */
 
 #define BMI270_I2C_ADDRESS     0x68
-
-#define BMI270_I2C_FREQ_HZ     100000
-
 #define BMI270_RW_LEN          46
 
-
-/* Physical ranges */
 #define ACC_RANGE_G            8.0f
 #define GYR_RANGE_DPS          2000.0f
 
-#define GRAVITY_MPS2           9.80665f
+/* =========================================================
+ * BMP388
+ * ========================================================= */
 
+#define BMP3_I2C_ADDRESS       0x76
+
+#define BMP_READ_INTERVAL_MS   40
+#define BMP_BASELINE_SAMPLES   50
+
+#define PRESSURE_FILTER_ALPHA  0.25f
 
 static const char *TAG =
+    "SENSOR_TEST";
+
+static const char *BMI_TAG =
     "BMI270";
 
-static const char *ALERT_TEST_TAG =
-    "ALERT_TEST";
+static const char *BMP_TAG =
+    "BMP388";
 
+static const char *BUTTON_TAG =
+    "BUTTON";
+
+static const char *MOTOR_TAG =
+    "MOTOR";
+
+static const char *BUZZER_TAG =
+    "BUZZER";
 
 /* =========================================================
- * BMI270 interface context
+ * Interface contexts
  * ========================================================= */
 
 typedef struct
@@ -54,9 +74,13 @@ typedef struct
     i2c_master_dev_handle_t dev_handle;
 } bmi270_intf_context_t;
 
+typedef struct
+{
+    i2c_master_dev_handle_t dev_handle;
+} bmp3_intf_context_t;
 
 /* =========================================================
- * Bosch SensorAPI -> ESP-IDF I2C read
+ * BMI270 I2C callbacks
  * ========================================================= */
 
 static BMI2_INTF_RETURN_TYPE bmi270_i2c_read(
@@ -68,14 +92,12 @@ static BMI2_INTF_RETURN_TYPE bmi270_i2c_read(
     bmi270_intf_context_t *ctx =
         (bmi270_intf_context_t *)intf_ptr;
 
-
-    if ((ctx == NULL) ||
-        (reg_data == NULL) ||
-        (len == 0)) {
-
+    if (ctx == NULL ||
+        reg_data == NULL ||
+        len == 0)
+    {
         return -1;
     }
-
 
     esp_err_t err =
         i2c_master_transmit_receive(
@@ -87,19 +109,13 @@ static BMI2_INTF_RETURN_TYPE bmi270_i2c_read(
             1000
         );
 
-
-    if (err != ESP_OK) {
+    if (err != ESP_OK)
+    {
         return -1;
     }
 
-
     return BMI2_INTF_RET_SUCCESS;
 }
-
-
-/* =========================================================
- * Bosch SensorAPI -> ESP-IDF I2C write
- * ========================================================= */
 
 static BMI2_INTF_RETURN_TYPE bmi270_i2c_write(
     uint8_t reg_addr,
@@ -110,31 +126,26 @@ static BMI2_INTF_RETURN_TYPE bmi270_i2c_write(
     bmi270_intf_context_t *ctx =
         (bmi270_intf_context_t *)intf_ptr;
 
-
-    if ((ctx == NULL) ||
-        (reg_data == NULL) ||
-        (len == 0) ||
-        (len > BMI2_MAX_BUFFER_SIZE)) {
-
+    if (ctx == NULL ||
+        reg_data == NULL ||
+        len == 0 ||
+        len > BMI2_MAX_BUFFER_SIZE)
+    {
         return -1;
     }
-
 
     uint8_t tx_buffer[
         BMI2_MAX_BUFFER_SIZE + 1
     ];
 
-
     tx_buffer[0] =
         reg_addr;
-
 
     memcpy(
         &tx_buffer[1],
         reg_data,
         len
     );
-
 
     esp_err_t err =
         i2c_master_transmit(
@@ -144,19 +155,13 @@ static BMI2_INTF_RETURN_TYPE bmi270_i2c_write(
             1000
         );
 
-
-    if (err != ESP_OK) {
+    if (err != ESP_OK)
+    {
         return -1;
     }
 
-
     return BMI2_INTF_RET_SUCCESS;
 }
-
-
-/* =========================================================
- * Bosch delay callback
- * ========================================================= */
 
 static void bmi270_delay_us(
     uint32_t period,
@@ -164,14 +169,101 @@ static void bmi270_delay_us(
 {
     (void)intf_ptr;
 
-    esp_rom_delay_us(
-        period
-    );
+    esp_rom_delay_us(period);
 }
 
+/* =========================================================
+ * BMP3 I2C callbacks
+ * ========================================================= */
+
+static BMP3_INTF_RET_TYPE bmp3_i2c_read(
+    uint8_t reg_addr,
+    uint8_t *reg_data,
+    uint32_t len,
+    void *intf_ptr)
+{
+    bmp3_intf_context_t *ctx =
+        (bmp3_intf_context_t *)intf_ptr;
+
+    if (ctx == NULL ||
+        reg_data == NULL ||
+        len == 0)
+    {
+        return -1;
+    }
+
+    esp_err_t err =
+        i2c_master_transmit_receive(
+            ctx->dev_handle,
+            &reg_addr,
+            1,
+            reg_data,
+            len,
+            1000
+        );
+
+    if (err != ESP_OK)
+    {
+        return -1;
+    }
+
+    return BMP3_INTF_RET_SUCCESS;
+}
+
+static BMP3_INTF_RET_TYPE bmp3_i2c_write(
+    uint8_t reg_addr,
+    const uint8_t *reg_data,
+    uint32_t len,
+    void *intf_ptr)
+{
+    bmp3_intf_context_t *ctx =
+        (bmp3_intf_context_t *)intf_ptr;
+
+    if (ctx == NULL ||
+        reg_data == NULL ||
+        len == 0)
+    {
+        return -1;
+    }
+
+    uint8_t tx_buffer[len + 1];
+
+    tx_buffer[0] =
+        reg_addr;
+
+    memcpy(
+        &tx_buffer[1],
+        reg_data,
+        len
+    );
+
+    esp_err_t err =
+        i2c_master_transmit(
+            ctx->dev_handle,
+            tx_buffer,
+            len + 1,
+            1000
+        );
+
+    if (err != ESP_OK)
+    {
+        return -1;
+    }
+
+    return BMP3_INTF_RET_SUCCESS;
+}
+
+static void bmp3_delay_us(
+    uint32_t period,
+    void *intf_ptr)
+{
+    (void)intf_ptr;
+
+    esp_rom_delay_us(period);
+}
 
 /* =========================================================
- * Conversion helpers
+ * Conversions
  * ========================================================= */
 
 static float accel_raw_to_g(
@@ -183,16 +275,6 @@ static float accel_raw_to_g(
     ) / 32768.0f;
 }
 
-
-static float accel_raw_to_mps2(
-    int16_t raw)
-{
-    return
-        accel_raw_to_g(raw) *
-        GRAVITY_MPS2;
-}
-
-
 static float gyro_raw_to_dps(
     int16_t raw)
 {
@@ -202,16 +284,42 @@ static float gyro_raw_to_dps(
     ) / 32768.0f;
 }
 
-
 /* =========================================================
- * Configure accelerometer + gyroscope
+ * Relative altitude
  * ========================================================= */
 
-static int8_t configure_accel_gyro(
+static float calculate_relative_altitude(
+    float pressure_pa,
+    float baseline_pressure_pa)
+{
+    if (pressure_pa <= 0.0f ||
+        baseline_pressure_pa <= 0.0f)
+    {
+        return 0.0f;
+    }
+
+    float ratio =
+        pressure_pa /
+        baseline_pressure_pa;
+
+    return 44330.0f *
+           (
+               1.0f -
+               powf(
+                   ratio,
+                   0.19029495f
+               )
+           );
+}
+
+/* =========================================================
+ * BMI270 configuration
+ * ========================================================= */
+
+static int8_t configure_bmi270(
     struct bmi2_dev *bmi)
 {
     struct bmi2_sens_config config[2];
-
 
     memset(
         config,
@@ -219,13 +327,11 @@ static int8_t configure_accel_gyro(
         sizeof(config)
     );
 
-
     config[0].type =
         BMI2_ACCEL;
 
     config[1].type =
         BMI2_GYRO;
-
 
     int8_t rslt =
         bmi2_get_sensor_config(
@@ -234,13 +340,10 @@ static int8_t configure_accel_gyro(
             bmi
         );
 
-
-    if (rslt != BMI2_OK) {
+    if (rslt != BMI2_OK)
+    {
         return rslt;
     }
-
-
-    /* ---------------- ACCELEROMETER ---------------- */
 
     config[0].cfg.acc.odr =
         BMI2_ACC_ODR_100HZ;
@@ -253,9 +356,6 @@ static int8_t configure_accel_gyro(
 
     config[0].cfg.acc.filter_perf =
         BMI2_PERF_OPT_MODE;
-
-
-    /* ---------------- GYROSCOPE ---------------- */
 
     config[1].cfg.gyr.odr =
         BMI2_GYR_ODR_100HZ;
@@ -272,15 +372,215 @@ static int8_t configure_accel_gyro(
     config[1].cfg.gyr.filter_perf =
         BMI2_PERF_OPT_MODE;
 
-
-    return
+    rslt =
         bmi2_set_sensor_config(
             config,
             2,
             bmi
         );
+
+    if (rslt != BMI2_OK)
+    {
+        return rslt;
+    }
+
+    uint8_t sensor_list[2] =
+    {
+        BMI2_ACCEL,
+        BMI2_GYRO
+    };
+
+    return bmi2_sensor_enable(
+        sensor_list,
+        2,
+        bmi
+    );
 }
 
+/* =========================================================
+ * BMP388 configuration
+ * ========================================================= */
+
+static int8_t configure_bmp3(
+    struct bmp3_dev *bmp,
+    struct bmp3_settings *settings)
+{
+    memset(
+        settings,
+        0,
+        sizeof(*settings)
+    );
+
+    settings->press_en =
+        BMP3_ENABLE;
+
+    settings->temp_en =
+        BMP3_ENABLE;
+
+    settings->odr_filter.press_os =
+        BMP3_OVERSAMPLING_4X;
+
+    settings->odr_filter.temp_os =
+        BMP3_OVERSAMPLING_2X;
+
+    settings->odr_filter.odr =
+        BMP3_ODR_25_HZ;
+
+    settings->odr_filter.iir_filter =
+        BMP3_IIR_FILTER_COEFF_3;
+
+    uint16_t settings_sel =
+        BMP3_SEL_PRESS_EN |
+        BMP3_SEL_TEMP_EN |
+        BMP3_SEL_PRESS_OS |
+        BMP3_SEL_TEMP_OS |
+        BMP3_SEL_ODR |
+        BMP3_SEL_IIR_FILTER;
+
+    int8_t rslt =
+        bmp3_set_sensor_settings(
+            settings_sel,
+            settings,
+            bmp
+        );
+
+    if (rslt != BMP3_OK)
+    {
+        return rslt;
+    }
+
+    settings->op_mode =
+        BMP3_MODE_NORMAL;
+
+    return bmp3_set_op_mode(
+        settings,
+        bmp
+    );
+}
+
+/* =========================================================
+ * Pressure baseline
+ * ========================================================= */
+
+static bool calibrate_pressure_baseline(
+    struct bmp3_dev *bmp,
+    float *baseline_pressure_pa)
+{
+    ESP_LOGI(
+        BMP_TAG,
+        "========================================"
+    );
+
+    ESP_LOGI(
+        BMP_TAG,
+        "CALIBRATING RELATIVE ALTITUDE"
+    );
+
+    ESP_LOGI(
+        BMP_TAG,
+        "Keep the device STILL for about 2 seconds..."
+    );
+
+    double pressure_sum =
+        0.0;
+
+    int valid_samples =
+        0;
+
+    for (int i = 0;
+         i < BMP_BASELINE_SAMPLES;
+         i++)
+    {
+        struct bmp3_data data;
+
+        memset(
+            &data,
+            0,
+            sizeof(data)
+        );
+
+        int8_t rslt =
+            bmp3_get_sensor_data(
+                BMP3_PRESS_TEMP,
+                &data,
+                bmp
+            );
+
+        if (rslt == BMP3_OK)
+        {
+#ifdef BMP3_FLOAT_COMPENSATION
+
+            float pressure =
+                (float)data.pressure;
+
+#else
+
+            float pressure =
+                (float)data.pressure /
+                100.0f;
+
+#endif
+
+            if (pressure > 30000.0f &&
+                pressure < 120000.0f)
+            {
+                pressure_sum +=
+                    pressure;
+
+                valid_samples++;
+            }
+        }
+
+        vTaskDelay(
+            pdMS_TO_TICKS(
+                BMP_READ_INTERVAL_MS
+            )
+        );
+    }
+
+    if (valid_samples <
+        (BMP_BASELINE_SAMPLES * 8 / 10))
+    {
+        ESP_LOGE(
+            BMP_TAG,
+            "Baseline FAILED: %d/%d valid samples",
+            valid_samples,
+            BMP_BASELINE_SAMPLES
+        );
+
+        return false;
+    }
+
+    *baseline_pressure_pa =
+        (float)(
+            pressure_sum /
+            valid_samples
+        );
+
+    ESP_LOGI(
+        BMP_TAG,
+        "Baseline PASS"
+    );
+
+    ESP_LOGI(
+        BMP_TAG,
+        "Baseline pressure = %.2f Pa = %.2f hPa",
+        *baseline_pressure_pa,
+        *baseline_pressure_pa / 100.0f
+    );
+
+    ESP_LOGI(
+        BMP_TAG,
+        "Relative altitude = 0.00 m"
+    );
+
+    ESP_LOGI(
+        BMP_TAG,
+        "========================================"
+    );
+
+    return true;
+}
 
 /* =========================================================
  * app_main
@@ -288,26 +588,17 @@ static int8_t configure_accel_gyro(
 
 void app_main(void)
 {
-    /*
-     * =====================================================
-     * ALERT MANAGER
-     *
-     * Initialize this FIRST.
-     *
-     * This forces vibration/buzzer toward
-     * their software-safe states as early
-     * as possible.
-     * =====================================================
-     */
+    /* =====================================================
+     * Alert hardware
+     * ===================================================== */
 
     esp_err_t err =
         alert_manager_init();
 
-
-    if (err != ESP_OK) {
-
+    if (err != ESP_OK)
+    {
         ESP_LOGE(
-            ALERT_TEST_TAG,
+            "ALERT",
             "alert_manager_init FAILED: %s",
             esp_err_to_name(err)
         );
@@ -315,77 +606,65 @@ void app_main(void)
         return;
     }
 
-
     ESP_LOGI(
-        TAG,
-        "========================================"
+        "ALERT",
+        "alert_manager_init PASS"
     );
 
-    ESP_LOGI(
-        TAG,
-        "BMI270 + ALERT MANAGER"
-    );
-
-    ESP_LOGI(
-        TAG,
-        "SDA          : GPIO%d",
-        BMI270_SDA_GPIO
-    );
-
-    ESP_LOGI(
-        TAG,
-        "SCL          : GPIO%d",
-        BMI270_SCL_GPIO
-    );
-
-    ESP_LOGI(
-        TAG,
-        "Address      : 0x%02X",
-        BMI270_I2C_ADDRESS
-    );
-
-    ESP_LOGI(
-        TAG,
-        "Accel ODR    : 100 Hz"
-    );
-
-    ESP_LOGI(
-        TAG,
-        "Accel range  : +/- 8 g"
-    );
-
-    ESP_LOGI(
-        TAG,
-        "Gyro ODR     : 100 Hz"
-    );
-
-    ESP_LOGI(
-        TAG,
-        "Gyro range   : +/- 2000 dps"
-    );
-
-    ESP_LOGI(
-        TAG,
-        "========================================"
-    );
-
+    /*
+     * Force safe startup states.
+     */
+    vibration_off();
+    buzzer_off();
 
     /* =====================================================
-     * Create I2C master bus
+     * Startup
      * ===================================================== */
 
-    i2c_master_bus_config_t bus_config = {
+    ESP_LOGI(
+        TAG,
+        "========================================"
+    );
+
+    ESP_LOGI(
+        TAG,
+        "BMI270 + BMP388 + ALERT HARDWARE TEST"
+    );
+
+    ESP_LOGI(
+        TAG,
+        "SDA = GPIO%d",
+        I2C_SDA_GPIO
+    );
+
+    ESP_LOGI(
+        TAG,
+        "SCL = GPIO%d",
+        I2C_SCL_GPIO
+    );
+
+    ESP_LOGI(
+        TAG,
+        "========================================"
+    );
+
+    /* =====================================================
+     * Shared I2C bus
+     * ===================================================== */
+
+    i2c_master_bus_config_t bus_config =
+    {
         .clk_source =
             I2C_CLK_SRC_DEFAULT,
 
         .i2c_port =
-            BMI270_I2C_PORT,
+            I2C_PORT,
 
         .sda_io_num =
-            BMI270_SDA_GPIO,
+            I2C_SDA_GPIO,
 
         .scl_io_num =
-            BMI270_SCL_GPIO,
+            I2C_SCL_GPIO,
 
         .glitch_ignore_cnt =
             7,
@@ -394,10 +673,8 @@ void app_main(void)
             true,
     };
 
-
     i2c_master_bus_handle_t bus_handle =
         NULL;
-
 
     err =
         i2c_new_master_bus(
@@ -405,24 +682,80 @@ void app_main(void)
             &bus_handle
         );
 
-
-    if (err != ESP_OK) {
-
+    if (err != ESP_OK)
+    {
         ESP_LOGE(
             TAG,
-            "I2C bus init failed: %s",
+            "I2C bus init FAILED: %s",
             esp_err_to_name(err)
         );
 
         return;
     }
 
+    ESP_LOGI(
+        TAG,
+        "I2C bus init PASS"
+    );
+
+    /* =====================================================
+     * Probe sensors
+     * ===================================================== */
+
+    err =
+        i2c_master_probe(
+            bus_handle,
+            BMI270_I2C_ADDRESS,
+            100
+        );
+
+    if (err != ESP_OK)
+    {
+        ESP_LOGE(
+            BMI_TAG,
+            "NOT detected at 0x%02X",
+            BMI270_I2C_ADDRESS
+        );
+
+        return;
+    }
+
+    ESP_LOGI(
+        BMI_TAG,
+        "Detected at 0x%02X",
+        BMI270_I2C_ADDRESS
+    );
+
+    err =
+        i2c_master_probe(
+            bus_handle,
+            BMP3_I2C_ADDRESS,
+            100
+        );
+
+    if (err != ESP_OK)
+    {
+        ESP_LOGE(
+            BMP_TAG,
+            "NOT detected at 0x%02X",
+            BMP3_I2C_ADDRESS
+        );
+
+        return;
+    }
+
+    ESP_LOGI(
+        BMP_TAG,
+        "Detected at 0x%02X",
+        BMP3_I2C_ADDRESS
+    );
 
     /* =====================================================
      * Add BMI270
      * ===================================================== */
 
-    i2c_device_config_t device_config = {
+    i2c_device_config_t bmi_config =
+    {
         .dev_addr_length =
             I2C_ADDR_BIT_LEN_7,
 
@@ -430,53 +763,82 @@ void app_main(void)
             BMI270_I2C_ADDRESS,
 
         .scl_speed_hz =
-            BMI270_I2C_FREQ_HZ,
+            I2C_FREQ_HZ,
     };
 
-
-    i2c_master_dev_handle_t bmi270_handle =
+    i2c_master_dev_handle_t bmi_handle =
         NULL;
-
 
     err =
         i2c_master_bus_add_device(
             bus_handle,
-            &device_config,
-            &bmi270_handle
+            &bmi_config,
+            &bmi_handle
         );
 
-
-    if (err != ESP_OK) {
-
+    if (err != ESP_OK)
+    {
         ESP_LOGE(
-            TAG,
-            "Failed to add BMI270: %s",
-            esp_err_to_name(err)
+            BMI_TAG,
+            "Add device FAILED"
         );
 
         return;
     }
 
-
     /* =====================================================
-     * Prepare Bosch SensorAPI
+     * Add BMP388
      * ===================================================== */
 
-    bmi270_intf_context_t intf_context = {
-        .dev_handle =
-            bmi270_handle
+    i2c_device_config_t bmp_config =
+    {
+        .dev_addr_length =
+            I2C_ADDR_BIT_LEN_7,
+
+        .device_address =
+            BMP3_I2C_ADDRESS,
+
+        .scl_speed_hz =
+            I2C_FREQ_HZ,
     };
 
+    i2c_master_dev_handle_t bmp_handle =
+        NULL;
+
+    err =
+        i2c_master_bus_add_device(
+            bus_handle,
+            &bmp_config,
+            &bmp_handle
+        );
+
+    if (err != ESP_OK)
+    {
+        ESP_LOGE(
+            BMP_TAG,
+            "Add device FAILED"
+        );
+
+        return;
+    }
+
+    /* =====================================================
+     * BMI270 init
+     * ===================================================== */
+
+    bmi270_intf_context_t bmi_ctx =
+    {
+        .dev_handle =
+            bmi_handle
+    };
 
     struct bmi2_dev bmi;
-
 
     memset(
         &bmi,
         0,
         sizeof(bmi)
     );
-
 
     bmi.intf =
         BMI2_I2C_INTF;
@@ -491,7 +853,7 @@ void app_main(void)
         bmi270_delay_us;
 
     bmi.intf_ptr =
-        &intf_context;
+        &bmi_ctx;
 
     bmi.read_write_len =
         BMI270_RW_LEN;
@@ -499,199 +861,292 @@ void app_main(void)
     bmi.config_file_ptr =
         NULL;
 
-
-    /* =====================================================
-     * Initialize BMI270
-     * ===================================================== */
-
-    int8_t rslt =
+    int8_t bmi_rslt =
         bmi270_init(
             &bmi
         );
 
-
-    if (rslt != BMI2_OK) {
-
+    if (bmi_rslt != BMI2_OK)
+    {
         ESP_LOGE(
-            TAG,
-            "bmi270_init FAILED: %d",
-            rslt
+            BMI_TAG,
+            "Init FAILED: %d",
+            bmi_rslt
         );
 
         return;
     }
 
-
     ESP_LOGI(
-        TAG,
-        "BMI270 init PASS, CHIP ID = 0x%02X",
+        BMI_TAG,
+        "Init PASS, CHIP_ID = 0x%02X",
         bmi.chip_id
     );
 
-
-    /* =====================================================
-     * Configure accel + gyro
-     * ===================================================== */
-
-    rslt =
-        configure_accel_gyro(
+    bmi_rslt =
+        configure_bmi270(
             &bmi
         );
 
-
-    if (rslt != BMI2_OK) {
-
+    if (bmi_rslt != BMI2_OK)
+    {
         ESP_LOGE(
-            TAG,
-            "ACC/GYRO configuration FAILED: %d",
-            rslt
+            BMI_TAG,
+            "Configuration FAILED: %d",
+            bmi_rslt
         );
 
         return;
     }
 
-
     ESP_LOGI(
-        TAG,
-        "ACC/GYRO configuration PASS"
+        BMI_TAG,
+        "ACC 100Hz +/-8g + GYRO 100Hz +/-2000dps PASS"
     );
 
-
     /* =====================================================
-     * Enable sensors
+     * BMP388 init
      * ===================================================== */
 
-    uint8_t sensor_list[2] = {
-        BMI2_ACCEL,
-        BMI2_GYRO
+    bmp3_intf_context_t bmp_ctx =
+    {
+        .dev_handle =
+            bmp_handle
     };
 
+    struct bmp3_dev bmp;
 
-    rslt =
-        bmi2_sensor_enable(
-            sensor_list,
-            2,
-            &bmi
+    memset(
+        &bmp,
+        0,
+        sizeof(bmp)
+    );
+
+    bmp.intf =
+        BMP3_I2C_INTF;
+
+    bmp.read =
+        bmp3_i2c_read;
+
+    bmp.write =
+        bmp3_i2c_write;
+
+    bmp.delay_us =
+        bmp3_delay_us;
+
+    bmp.intf_ptr =
+        &bmp_ctx;
+
+    int8_t bmp_rslt =
+        bmp3_init(
+            &bmp
         );
 
-
-    if (rslt != BMI2_OK) {
-
+    if (bmp_rslt != BMP3_OK)
+    {
         ESP_LOGE(
-            TAG,
-            "ACC/GYRO enable FAILED: %d",
-            rslt
+            BMP_TAG,
+            "bmp3_init FAILED: %d",
+            bmp_rslt
         );
 
         return;
     }
 
-
     ESP_LOGI(
-        TAG,
-        "ACC + GYRO enabled"
+        BMP_TAG,
+        "BMP3 init PASS, CHIP_ID = 0x%02X",
+        bmp.chip_id
     );
 
+    struct bmp3_settings bmp_settings;
+
+    bmp_rslt =
+        configure_bmp3(
+            &bmp,
+            &bmp_settings
+        );
+
+    if (bmp_rslt != BMP3_OK)
+    {
+        ESP_LOGE(
+            BMP_TAG,
+            "Configuration FAILED: %d",
+            bmp_rslt
+        );
+
+        return;
+    }
+
+    ESP_LOGI(
+        BMP_TAG,
+        "Pressure + temperature enabled"
+    );
 
     vTaskDelay(
         pdMS_TO_TICKS(100)
     );
 
+    /* =====================================================
+     * BMP pressure baseline
+     * ===================================================== */
+
+    float baseline_pressure_pa =
+        0.0f;
+
+    if (!calibrate_pressure_baseline(
+            &bmp,
+            &baseline_pressure_pa))
+    {
+        return;
+    }
 
     /* =====================================================
-     * PHASE 4 API smoke test
-     *
-     * Current physical setup:
-     * buzzer is connected.
-     *
-     * Vibration/button may currently be disconnected.
-     *
-     * No fall state machine yet.
+     * Vibration motor smoke test
      * ===================================================== */
 
     ESP_LOGI(
-        ALERT_TEST_TAG,
+        MOTOR_TAG,
         "========================================"
     );
 
     ESP_LOGI(
-        ALERT_TEST_TAG,
-        "ALERT MANAGER API TEST"
+        MOTOR_TAG,
+        "VIBRATION MOTOR TEST - GPIO5"
+    );
+
+    vibration_off();
+
+    ESP_LOGI(
+        MOTOR_TAG,
+        "Motor OFF"
+    );
+
+    vTaskDelay(
+        pdMS_TO_TICKS(1000)
     );
 
     ESP_LOGI(
-        ALERT_TEST_TAG,
-        "Waiting 2 seconds before buzzer test"
+        MOTOR_TAG,
+        "Motor ON - 1 second"
     );
 
+    vibration_on();
+
+    vTaskDelay(
+        pdMS_TO_TICKS(1000)
+    );
+
+    vibration_off();
+
+    ESP_LOGI(
+        MOTOR_TAG,
+        "Motor OFF"
+    );
+
+    ESP_LOGI(
+        MOTOR_TAG,
+        "VIBRATION MOTOR TEST COMPLETE"
+    );
+
+    ESP_LOGI(
+        MOTOR_TAG,
+        "========================================"
+    );
+
+    /* =====================================================
+     * Buzzer smoke test
+     * ===================================================== */
+
+    /*
+     * alert_manager.c already generates the
+     * approximately 2.5 kHz PWM required by MH-FMD.
+     */
+
+    ESP_LOGI(
+        BUZZER_TAG,
+        "========================================"
+    );
+
+    ESP_LOGI(
+        BUZZER_TAG,
+        "BUZZER PWM TEST - GPIO6"
+    );
 
     buzzer_off();
 
-
-    vTaskDelay(
-        pdMS_TO_TICKS(2000)
+    ESP_LOGI(
+        BUZZER_TAG,
+        "Buzzer OFF"
     );
-
 
     ESP_LOGI(
-        ALERT_TEST_TAG,
-        "buzzer_on() - 2 seconds"
+        BUZZER_TAG,
+        "Waiting 1 second..."
     );
 
+    vTaskDelay(
+        pdMS_TO_TICKS(1000)
+    );
+
+    ESP_LOGI(
+        BUZZER_TAG,
+        "Buzzer ON - PWM ~2.5 kHz - 2 seconds"
+    );
 
     buzzer_on();
 
-
     vTaskDelay(
         pdMS_TO_TICKS(2000)
     );
 
-
     buzzer_off();
 
-
     ESP_LOGI(
-        ALERT_TEST_TAG,
-        "buzzer_off()"
-    );
-
-
-    ESP_LOGI(
-        ALERT_TEST_TAG,
-        "API test complete"
+        BUZZER_TAG,
+        "Buzzer OFF"
     );
 
     ESP_LOGI(
-        ALERT_TEST_TAG,
+        BUZZER_TAG,
+        "BUZZER TEST COMPLETE"
+    );
+
+    ESP_LOGI(
+        BUZZER_TAG,
         "========================================"
     );
 
-
     /* =====================================================
-     * BMI270 normal read loop
+     * Runtime variables
      * ===================================================== */
 
-    struct bmi2_sens_data sensor_data;
+    float filtered_pressure_pa =
+        baseline_pressure_pa;
 
+    bool pressure_filter_initialized =
+        false;
 
-    memset(
-        &sensor_data,
-        0,
-        sizeof(sensor_data)
-    );
-
-
-    uint32_t sample_count =
+    uint32_t loop_count =
         0;
 
+    struct bmi2_sens_data bmi_data;
+
+    memset(
+        &bmi_data,
+        0,
+        sizeof(bmi_data)
+    );
 
     TickType_t last_wake_time =
         xTaskGetTickCount();
 
-
-    const TickType_t sample_period =
+    const TickType_t loop_period =
         pdMS_TO_TICKS(10);
 
+    /* =====================================================
+     * Normal operation
+     * ===================================================== */
 
     ESP_LOGI(
         TAG,
@@ -700,27 +1155,17 @@ void app_main(void)
 
     ESP_LOGI(
         TAG,
-        "BMI270 DATA STREAM STARTED"
+        "DATA STREAM STARTED"
+    );
+
+    ESP_LOGI(
+        BUTTON_TAG,
+        "Press GPIO4 button to test"
     );
 
     ESP_LOGI(
         TAG,
-        "Sensor ODR = 100 Hz"
-    );
-
-    ESP_LOGI(
-        TAG,
-        "Host polling ~= 100 Hz"
-    );
-
-    ESP_LOGI(
-        TAG,
-        "Serial display ~= 10 Hz"
-    );
-
-    ESP_LOGI(
-        ALERT_TEST_TAG,
-        "button_pressed() polling active"
+        "BMI270 + BMP388 + BUTTON active"
     );
 
     ESP_LOGI(
@@ -728,156 +1173,168 @@ void app_main(void)
         "========================================"
     );
 
+    while (1)
+    {
+        loop_count++;
 
-    while (1) {
+        /* =================================================
+         * Button
+         * ================================================= */
 
-        /*
-         * ---------------------------------------------
-         * BMI270
-         * ---------------------------------------------
-         */
-
-        rslt =
-            bmi2_get_sensor_data(
-                &sensor_data,
-                &bmi
-            );
-
-
-        if (rslt != BMI2_OK) {
-
-            ESP_LOGE(
-                TAG,
-                "Sensor read error: %d",
-                rslt
-            );
-
-        }
-        else if (
-            (sensor_data.status &
-             BMI2_DRDY_ACC) &&
-
-            (sensor_data.status &
-             BMI2_DRDY_GYR)
-        ) {
-
-            sample_count++;
-
-
-            /*
-             * Print approximately 10 Hz.
-             */
-            if ((sample_count % 10) == 0) {
-
-                float ax_g =
-                    accel_raw_to_g(
-                        sensor_data.acc.x
-                    );
-
-                float ay_g =
-                    accel_raw_to_g(
-                        sensor_data.acc.y
-                    );
-
-                float az_g =
-                    accel_raw_to_g(
-                        sensor_data.acc.z
-                    );
-
-
-                float ax_ms2 =
-                    accel_raw_to_mps2(
-                        sensor_data.acc.x
-                    );
-
-                float ay_ms2 =
-                    accel_raw_to_mps2(
-                        sensor_data.acc.y
-                    );
-
-                float az_ms2 =
-                    accel_raw_to_mps2(
-                        sensor_data.acc.z
-                    );
-
-
-                float gx_dps =
-                    gyro_raw_to_dps(
-                        sensor_data.gyr.x
-                    );
-
-                float gy_dps =
-                    gyro_raw_to_dps(
-                        sensor_data.gyr.y
-                    );
-
-                float gz_dps =
-                    gyro_raw_to_dps(
-                        sensor_data.gyr.z
-                    );
-
-
-                ESP_LOGI(
-                    TAG,
-
-                    "RAW A[%6d %6d %6d] "
-                    "G[%6d %6d %6d] | "
-                    "ACC[g]=[%+.3f %+.3f %+.3f] | "
-                    "ACC[m/s2]=[%+.2f %+.2f %+.2f] | "
-                    "GYR[dps]=[%+.2f %+.2f %+.2f]",
-
-                    sensor_data.acc.x,
-                    sensor_data.acc.y,
-                    sensor_data.acc.z,
-
-                    sensor_data.gyr.x,
-                    sensor_data.gyr.y,
-                    sensor_data.gyr.z,
-
-                    ax_g,
-                    ay_g,
-                    az_g,
-
-                    ax_ms2,
-                    ay_ms2,
-                    az_ms2,
-
-                    gx_dps,
-                    gy_dps,
-                    gz_dps
-                );
-            }
-        }
-
-
-        /*
-         * ---------------------------------------------
-         * BUTTON
-         *
-         * No state machine yet.
-         *
-         * Just verify API event.
-         * ---------------------------------------------
-         */
-
-        if (button_pressed()) {
-
+        if (button_pressed())
+        {
             ESP_LOGI(
-                ALERT_TEST_TAG,
+                BUTTON_TAG,
                 "BUTTON_PRESSED"
             );
         }
 
+        /* =================================================
+         * BMI270
+         * ================================================= */
 
-        /*
-         * ---------------------------------------------
-         * Keep approximately 100 Hz host loop.
-         * ---------------------------------------------
-         */
+        bmi_rslt =
+            bmi2_get_sensor_data(
+                &bmi_data,
+                &bmi
+            );
+
+        if (bmi_rslt == BMI2_OK)
+        {
+            if ((loop_count % 10) == 0)
+            {
+                float ax =
+                    accel_raw_to_g(
+                        bmi_data.acc.x
+                    );
+
+                float ay =
+                    accel_raw_to_g(
+                        bmi_data.acc.y
+                    );
+
+                float az =
+                    accel_raw_to_g(
+                        bmi_data.acc.z
+                    );
+
+                float gx =
+                    gyro_raw_to_dps(
+                        bmi_data.gyr.x
+                    );
+
+                float gy =
+                    gyro_raw_to_dps(
+                        bmi_data.gyr.y
+                    );
+
+                float gz =
+                    gyro_raw_to_dps(
+                        bmi_data.gyr.z
+                    );
+
+                ESP_LOGI(
+                    BMI_TAG,
+                    "ACC[g]=[%+.3f %+.3f %+.3f] | "
+                    "GYR[dps]=[%+.2f %+.2f %+.2f]",
+                    ax,
+                    ay,
+                    az,
+                    gx,
+                    gy,
+                    gz
+                );
+            }
+        }
+
+        /* =================================================
+         * BMP388
+         * ================================================= */
+
+        if ((loop_count % 4) == 0)
+        {
+            struct bmp3_data bmp_data;
+
+            memset(
+                &bmp_data,
+                0,
+                sizeof(bmp_data)
+            );
+
+            bmp_rslt =
+                bmp3_get_sensor_data(
+                    BMP3_PRESS_TEMP,
+                    &bmp_data,
+                    &bmp
+                );
+
+            if (bmp_rslt == BMP3_OK)
+            {
+#ifdef BMP3_FLOAT_COMPENSATION
+
+                float pressure_pa =
+                    (float)bmp_data.pressure;
+
+                float temperature_c =
+                    (float)bmp_data.temperature;
+
+#else
+
+                float pressure_pa =
+                    (float)bmp_data.pressure /
+                    100.0f;
+
+                float temperature_c =
+                    (float)bmp_data.temperature /
+                    100.0f;
+
+#endif
+
+                if (!pressure_filter_initialized)
+                {
+                    filtered_pressure_pa =
+                        pressure_pa;
+
+                    pressure_filter_initialized =
+                        true;
+                }
+                else
+                {
+                    filtered_pressure_pa =
+                        PRESSURE_FILTER_ALPHA *
+                        pressure_pa +
+
+                        (1.0f -
+                         PRESSURE_FILTER_ALPHA) *
+                        filtered_pressure_pa;
+                }
+
+                float relative_altitude_m =
+                    calculate_relative_altitude(
+                        filtered_pressure_pa,
+                        baseline_pressure_pa
+                    );
+
+                if ((loop_count % 20) == 0)
+                {
+                    ESP_LOGI(
+                        BMP_TAG,
+                        "TEMP=%.2f C | "
+                        "PRESS=%.2f Pa | "
+                        "FILT=%.2f Pa | "
+                        "REL_ALT=%+.2f m",
+                        temperature_c,
+                        pressure_pa,
+                        filtered_pressure_pa,
+                        relative_altitude_m
+                    );
+                }
+            }
+        }
 
         vTaskDelayUntil(
             &last_wake_time,
-            sample_period
+            loop_period
         );
     }
 }
