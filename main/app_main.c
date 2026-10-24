@@ -2,68 +2,29 @@
 #include <stdbool.h>
 #include <string.h>
 #include <math.h>
-
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-
 #include "driver/i2c_master.h"
-
 #include "esp_err.h"
 #include "esp_log.h"
 #include "esp_rom_sys.h"
-
 #include "bmi270.h"
 #include "bmp3.h"
-
 #include "alert_manager.h"
+#include "sensor_manager.h"
 
-/* =========================================================
- * Shared I2C bus
- * ========================================================= */
+/* PHASE 4 wiring and driver interface are intentionally preserved. */
+#define I2C_SDA_GPIO 8
+#define I2C_SCL_GPIO 9
+#define I2C_PORT I2C_NUM_0
+#define I2C_FREQ_HZ 100000
+#define BMI270_I2C_ADDRESS 0x68
+#define BMI270_RW_LEN 46
+#define BMP3_I2C_ADDRESS 0x76
 
-#define I2C_SDA_GPIO           8
-#define I2C_SCL_GPIO           9
-#define I2C_PORT               I2C_NUM_0
-#define I2C_FREQ_HZ            100000
-
-/* =========================================================
- * BMI270
- * ========================================================= */
-
-#define BMI270_I2C_ADDRESS     0x68
-#define BMI270_RW_LEN          46
-
-#define ACC_RANGE_G            8.0f
-#define GYR_RANGE_DPS          2000.0f
-
-/* =========================================================
- * BMP388
- * ========================================================= */
-
-#define BMP3_I2C_ADDRESS       0x76
-
-#define BMP_READ_INTERVAL_MS   40
-#define BMP_BASELINE_SAMPLES   50
-
-#define PRESSURE_FILTER_ALPHA  0.25f
-
-static const char *TAG =
-    "SENSOR_TEST";
-
-static const char *BMI_TAG =
-    "BMI270";
-
-static const char *BMP_TAG =
-    "BMP388";
-
-static const char *BUTTON_TAG =
-    "BUTTON";
-
-static const char *MOTOR_TAG =
-    "MOTOR";
-
-static const char *BUZZER_TAG =
-    "BUZZER";
+static const char *TAG = "SENSOR_TEST";
+static const char *BMI_TAG = "BMI270";
+static const char *BMP_TAG = "BMP388";
 
 /* =========================================================
  * Interface contexts
@@ -263,56 +224,6 @@ static void bmp3_delay_us(
 }
 
 /* =========================================================
- * Conversions
- * ========================================================= */
-
-static float accel_raw_to_g(
-    int16_t raw)
-{
-    return (
-        (float)raw *
-        ACC_RANGE_G
-    ) / 32768.0f;
-}
-
-static float gyro_raw_to_dps(
-    int16_t raw)
-{
-    return (
-        (float)raw *
-        GYR_RANGE_DPS
-    ) / 32768.0f;
-}
-
-/* =========================================================
- * Relative altitude
- * ========================================================= */
-
-static float calculate_relative_altitude(
-    float pressure_pa,
-    float baseline_pressure_pa)
-{
-    if (pressure_pa <= 0.0f ||
-        baseline_pressure_pa <= 0.0f)
-    {
-        return 0.0f;
-    }
-
-    float ratio =
-        pressure_pa /
-        baseline_pressure_pa;
-
-    return 44330.0f *
-           (
-               1.0f -
-               powf(
-                   ratio,
-                   0.19029495f
-               )
-           );
-}
-
-/* =========================================================
  * BMI270 configuration
  * ========================================================= */
 
@@ -458,134 +369,6 @@ static int8_t configure_bmp3(
     );
 }
 
-/* =========================================================
- * Pressure baseline
- * ========================================================= */
-
-static bool calibrate_pressure_baseline(
-    struct bmp3_dev *bmp,
-    float *baseline_pressure_pa)
-{
-    ESP_LOGI(
-        BMP_TAG,
-        "========================================"
-    );
-
-    ESP_LOGI(
-        BMP_TAG,
-        "CALIBRATING RELATIVE ALTITUDE"
-    );
-
-    ESP_LOGI(
-        BMP_TAG,
-        "Keep the device STILL for about 2 seconds..."
-    );
-
-    double pressure_sum =
-        0.0;
-
-    int valid_samples =
-        0;
-
-    for (int i = 0;
-         i < BMP_BASELINE_SAMPLES;
-         i++)
-    {
-        struct bmp3_data data;
-
-        memset(
-            &data,
-            0,
-            sizeof(data)
-        );
-
-        int8_t rslt =
-            bmp3_get_sensor_data(
-                BMP3_PRESS_TEMP,
-                &data,
-                bmp
-            );
-
-        if (rslt == BMP3_OK)
-        {
-#ifdef BMP3_FLOAT_COMPENSATION
-
-            float pressure =
-                (float)data.pressure;
-
-#else
-
-            float pressure =
-                (float)data.pressure /
-                100.0f;
-
-#endif
-
-            if (pressure > 30000.0f &&
-                pressure < 120000.0f)
-            {
-                pressure_sum +=
-                    pressure;
-
-                valid_samples++;
-            }
-        }
-
-        vTaskDelay(
-            pdMS_TO_TICKS(
-                BMP_READ_INTERVAL_MS
-            )
-        );
-    }
-
-    if (valid_samples <
-        (BMP_BASELINE_SAMPLES * 8 / 10))
-    {
-        ESP_LOGE(
-            BMP_TAG,
-            "Baseline FAILED: %d/%d valid samples",
-            valid_samples,
-            BMP_BASELINE_SAMPLES
-        );
-
-        return false;
-    }
-
-    *baseline_pressure_pa =
-        (float)(
-            pressure_sum /
-            valid_samples
-        );
-
-    ESP_LOGI(
-        BMP_TAG,
-        "Baseline PASS"
-    );
-
-    ESP_LOGI(
-        BMP_TAG,
-        "Baseline pressure = %.2f Pa = %.2f hPa",
-        *baseline_pressure_pa,
-        *baseline_pressure_pa / 100.0f
-    );
-
-    ESP_LOGI(
-        BMP_TAG,
-        "Relative altitude = 0.00 m"
-    );
-
-    ESP_LOGI(
-        BMP_TAG,
-        "========================================"
-    );
-
-    return true;
-}
-
-/* =========================================================
- * app_main
- * ========================================================= */
-
 void app_main(void)
 {
     /* =====================================================
@@ -628,7 +411,7 @@ void app_main(void)
 
     ESP_LOGI(
         TAG,
-        "BMI270 + BMP388 + ALERT HARDWARE TEST"
+        "PHASE 5.2b - BMI270 SENSOR MANAGER"
     );
 
     ESP_LOGI(
@@ -826,13 +609,10 @@ void app_main(void)
      * BMI270 init
      * ===================================================== */
 
-    bmi270_intf_context_t bmi_ctx =
-    {
-        .dev_handle =
-            bmi_handle
-    };
+    static bmi270_intf_context_t bmi_ctx;
+    bmi_ctx.dev_handle = bmi_handle;
 
-    struct bmi2_dev bmi;
+    static struct bmi2_dev bmi;
 
     memset(
         &bmi,
@@ -908,13 +688,10 @@ void app_main(void)
      * BMP388 init
      * ===================================================== */
 
-    bmp3_intf_context_t bmp_ctx =
-    {
-        .dev_handle =
-            bmp_handle
-    };
+    static bmp3_intf_context_t bmp_ctx;
+    bmp_ctx.dev_handle = bmp_handle;
 
-    struct bmp3_dev bmp;
+    static struct bmp3_dev bmp;
 
     memset(
         &bmp,
@@ -987,354 +764,21 @@ void app_main(void)
         pdMS_TO_TICKS(100)
     );
 
-    /* =====================================================
-     * BMP pressure baseline
-     * ===================================================== */
+    /* PHASE 5.2b: stop the old polling loop. Only Sensor Task reads BMI270. */
+    ESP_LOGI(TAG, "BMI270 manager init; BMP388 initialized but NOT sampled yet");
+    ESP_LOGI(TAG, "Vibration and buzzer OFF for clean acquisition");
 
-    float baseline_pressure_pa =
-        0.0f;
-
-    if (!calibrate_pressure_baseline(
-            &bmp,
-            &baseline_pressure_pa))
+    err = sensor_manager_start(&bmi, &bmp);
+    if (err != ESP_OK)
     {
+        ESP_LOGE(TAG, "sensor_manager_start FAILED: %s", esp_err_to_name(err));
         return;
     }
+    ESP_LOGI(TAG, "Sensor Manager started; requested interval = 10000 us");
 
-    /* =====================================================
-     * Vibration motor smoke test
-     * ===================================================== */
-
-    ESP_LOGI(
-        MOTOR_TAG,
-        "========================================"
-    );
-
-    ESP_LOGI(
-        MOTOR_TAG,
-        "VIBRATION MOTOR TEST - GPIO5"
-    );
-
-    vibration_off();
-
-    ESP_LOGI(
-        MOTOR_TAG,
-        "Motor OFF"
-    );
-
-    vTaskDelay(
-        pdMS_TO_TICKS(1000)
-    );
-
-    ESP_LOGI(
-        MOTOR_TAG,
-        "Motor ON - 1 second"
-    );
-
-    vibration_on();
-
-    vTaskDelay(
-        pdMS_TO_TICKS(1000)
-    );
-
-    vibration_off();
-
-    ESP_LOGI(
-        MOTOR_TAG,
-        "Motor OFF"
-    );
-
-    ESP_LOGI(
-        MOTOR_TAG,
-        "VIBRATION MOTOR TEST COMPLETE"
-    );
-
-    ESP_LOGI(
-        MOTOR_TAG,
-        "========================================"
-    );
-
-    /* =====================================================
-     * Buzzer smoke test
-     * ===================================================== */
-
-    /*
-     * alert_manager.c already generates the
-     * approximately 2.5 kHz PWM required by MH-FMD.
-     */
-
-    ESP_LOGI(
-        BUZZER_TAG,
-        "========================================"
-    );
-
-    ESP_LOGI(
-        BUZZER_TAG,
-        "BUZZER PWM TEST - GPIO6"
-    );
-
-    buzzer_off();
-
-    ESP_LOGI(
-        BUZZER_TAG,
-        "Buzzer OFF"
-    );
-
-    ESP_LOGI(
-        BUZZER_TAG,
-        "Waiting 1 second..."
-    );
-
-    vTaskDelay(
-        pdMS_TO_TICKS(1000)
-    );
-
-    ESP_LOGI(
-        BUZZER_TAG,
-        "Buzzer ON - PWM ~2.5 kHz - 2 seconds"
-    );
-
-    buzzer_on();
-
-    vTaskDelay(
-        pdMS_TO_TICKS(2000)
-    );
-
-    buzzer_off();
-
-    ESP_LOGI(
-        BUZZER_TAG,
-        "Buzzer OFF"
-    );
-
-    ESP_LOGI(
-        BUZZER_TAG,
-        "BUZZER TEST COMPLETE"
-    );
-
-    ESP_LOGI(
-        BUZZER_TAG,
-        "========================================"
-    );
-
-    /* =====================================================
-     * Runtime variables
-     * ===================================================== */
-
-    float filtered_pressure_pa =
-        baseline_pressure_pa;
-
-    bool pressure_filter_initialized =
-        false;
-
-    uint32_t loop_count =
-        0;
-
-    struct bmi2_sens_data bmi_data;
-
-    memset(
-        &bmi_data,
-        0,
-        sizeof(bmi_data)
-    );
-
-    TickType_t last_wake_time =
-        xTaskGetTickCount();
-
-    const TickType_t loop_period =
-        pdMS_TO_TICKS(10);
-
-    /* =====================================================
-     * Normal operation
-     * ===================================================== */
-
-    ESP_LOGI(
-        TAG,
-        "========================================"
-    );
-
-    ESP_LOGI(
-        TAG,
-        "DATA STREAM STARTED"
-    );
-
-    ESP_LOGI(
-        BUTTON_TAG,
-        "Press GPIO4 button to test"
-    );
-
-    ESP_LOGI(
-        TAG,
-        "BMI270 + BMP388 + BUTTON active"
-    );
-
-    ESP_LOGI(
-        TAG,
-        "========================================"
-    );
-
+    /* app_main remains alive; the Bosch contexts above also have static storage. */
     while (1)
     {
-        loop_count++;
-
-        /* =================================================
-         * Button
-         * ================================================= */
-
-        if (button_pressed())
-        {
-            ESP_LOGI(
-                BUTTON_TAG,
-                "BUTTON_PRESSED"
-            );
-        }
-
-        /* =================================================
-         * BMI270
-         * ================================================= */
-
-        bmi_rslt =
-            bmi2_get_sensor_data(
-                &bmi_data,
-                &bmi
-            );
-
-        if (bmi_rslt == BMI2_OK)
-        {
-            if ((loop_count % 10) == 0)
-            {
-                float ax =
-                    accel_raw_to_g(
-                        bmi_data.acc.x
-                    );
-
-                float ay =
-                    accel_raw_to_g(
-                        bmi_data.acc.y
-                    );
-
-                float az =
-                    accel_raw_to_g(
-                        bmi_data.acc.z
-                    );
-
-                float gx =
-                    gyro_raw_to_dps(
-                        bmi_data.gyr.x
-                    );
-
-                float gy =
-                    gyro_raw_to_dps(
-                        bmi_data.gyr.y
-                    );
-
-                float gz =
-                    gyro_raw_to_dps(
-                        bmi_data.gyr.z
-                    );
-
-                ESP_LOGI(
-                    BMI_TAG,
-                    "ACC[g]=[%+.3f %+.3f %+.3f] | "
-                    "GYR[dps]=[%+.2f %+.2f %+.2f]",
-                    ax,
-                    ay,
-                    az,
-                    gx,
-                    gy,
-                    gz
-                );
-            }
-        }
-
-        /* =================================================
-         * BMP388
-         * ================================================= */
-
-        if ((loop_count % 4) == 0)
-        {
-            struct bmp3_data bmp_data;
-
-            memset(
-                &bmp_data,
-                0,
-                sizeof(bmp_data)
-            );
-
-            bmp_rslt =
-                bmp3_get_sensor_data(
-                    BMP3_PRESS_TEMP,
-                    &bmp_data,
-                    &bmp
-                );
-
-            if (bmp_rslt == BMP3_OK)
-            {
-#ifdef BMP3_FLOAT_COMPENSATION
-
-                float pressure_pa =
-                    (float)bmp_data.pressure;
-
-                float temperature_c =
-                    (float)bmp_data.temperature;
-
-#else
-
-                float pressure_pa =
-                    (float)bmp_data.pressure /
-                    100.0f;
-
-                float temperature_c =
-                    (float)bmp_data.temperature /
-                    100.0f;
-
-#endif
-
-                if (!pressure_filter_initialized)
-                {
-                    filtered_pressure_pa =
-                        pressure_pa;
-
-                    pressure_filter_initialized =
-                        true;
-                }
-                else
-                {
-                    filtered_pressure_pa =
-                        PRESSURE_FILTER_ALPHA *
-                        pressure_pa +
-
-                        (1.0f -
-                         PRESSURE_FILTER_ALPHA) *
-                        filtered_pressure_pa;
-                }
-
-                float relative_altitude_m =
-                    calculate_relative_altitude(
-                        filtered_pressure_pa,
-                        baseline_pressure_pa
-                    );
-
-                if ((loop_count % 20) == 0)
-                {
-                    ESP_LOGI(
-                        BMP_TAG,
-                        "TEMP=%.2f C | "
-                        "PRESS=%.2f Pa | "
-                        "FILT=%.2f Pa | "
-                        "REL_ALT=%+.2f m",
-                        temperature_c,
-                        pressure_pa,
-                        filtered_pressure_pa,
-                        relative_altitude_m
-                    );
-                }
-            }
-        }
-
-        vTaskDelayUntil(
-            &last_wake_time,
-            loop_period
-        );
+        vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
