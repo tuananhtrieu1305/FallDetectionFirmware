@@ -1,17 +1,22 @@
+
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
 #include <math.h>
+
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "driver/i2c_master.h"
 #include "esp_err.h"
 #include "esp_log.h"
 #include "esp_rom_sys.h"
+
 #include "bmi270.h"
 #include "bmp3.h"
 #include "alert_manager.h"
 #include "sensor_manager.h"
+#include "gnss_manager.h"
+#include "lte_manager.h"
 
 /* PHASE 4 wiring and driver interface are intentionally preserved. */
 #define I2C_SDA_GPIO 8
@@ -344,7 +349,6 @@ static int8_t configure_bmp3(
         BMP3_SEL_PRESS_EN |
         BMP3_SEL_TEMP_EN |
         BMP3_SEL_PRESS_OS |
-        BMP3_SEL_TEMP_OS |
         BMP3_SEL_ODR |
         BMP3_SEL_IIR_FILTER;
 
@@ -411,7 +415,7 @@ void app_main(void)
 
     ESP_LOGI(
         TAG,
-        "PHASE 5.2b - BMI270 SENSOR MANAGER"
+        "PHASE 6.2 - SENSOR MANAGER + GNSS RAW NMEA"
     );
 
     ESP_LOGI(
@@ -764,21 +768,104 @@ void app_main(void)
         pdMS_TO_TICKS(100)
     );
 
-    /* PHASE 5.2b: stop the old polling loop. Only Sensor Task reads BMI270. */
-    ESP_LOGI(TAG, "BMI270 manager init; BMP388 initialized but NOT sampled yet");
-    ESP_LOGI(TAG, "Vibration and buzzer OFF for clean acquisition");
+    /* =====================================================
+     * PHASE 5 - Sensor Manager
+     * ===================================================== */
+
+    /*
+     * Only Sensor Task reads BMI270.
+     * BMP388 is initialized, preserving Phase 5 behavior.
+     */
+    ESP_LOGI(
+        TAG,
+        "BMI270 manager init; BMP388 initialized but NOT sampled yet"
+    );
+
+    ESP_LOGI(
+        TAG,
+        "Vibration and buzzer OFF for clean acquisition"
+    );
 
     err = sensor_manager_start(&bmi, &bmp);
+
     if (err != ESP_OK)
     {
-        ESP_LOGE(TAG, "sensor_manager_start FAILED: %s", esp_err_to_name(err));
+        ESP_LOGE(
+            TAG,
+            "sensor_manager_start FAILED: %s",
+            esp_err_to_name(err)
+        );
+
         return;
     }
-    ESP_LOGI(TAG, "Sensor Manager started; requested interval = 10000 us");
 
-    /* app_main remains alive; the Bosch contexts above also have static storage. */
+    ESP_LOGI(
+        TAG,
+        "Sensor Manager started; requested interval = 10000 us"
+    );
+
+    /* =====================================================
+     * PHASE 6.2 - NEO-M8N GNSS
+     * ===================================================== */
+
+    /*
+     * Start a separate UART1 task.
+     * A GNSS error must not stop Sensor Manager.
+     */
+
+    err = gnss_manager_start();
+
+    if (err != ESP_OK)
+    {
+        ESP_LOGE(
+            TAG,
+            "gnss_manager_start FAILED: %s",
+            esp_err_to_name(err)
+        );
+    }
+    else
+    {
+        ESP_LOGI(
+            TAG,
+            "GNSS raw NMEA task started on UART1 / GPIO15 / 9600 baud"
+        );
+    }
+
+    /* =====================================================
+     * PHASE 7 - A7670C LTE UART2 AT bring-up
+     * ===================================================== */
+
+    err = lte_manager_start();
+
+    if (err != ESP_OK)
+    {
+        ESP_LOGE(
+            TAG,
+            "lte_manager_start FAILED: %s",
+            esp_err_to_name(err)
+        );
+    }
+    else
+    {
+        ESP_LOGI(
+            TAG,
+            "LTE AT task started on UART2 / TX17 / RX18"
+        );
+    }
+
+    /* =====================================================
+     * Main task idle loop
+     * ===================================================== */
+
+    /*
+     * Keep app_main alive.
+     * Bosch contexts above have static storage.
+     */
+
     while (1)
     {
-        vTaskDelay(pdMS_TO_TICKS(1000));
+        vTaskDelay(
+            pdMS_TO_TICKS(1000)
+        );
     }
 }
