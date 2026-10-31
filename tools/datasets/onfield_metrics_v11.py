@@ -12,7 +12,7 @@ from metrics_v11 import evaluate
 from run_metrics_v11 import sha, dump
 
 
-def evaluate_file(path,model,chunksize=100000):
+def evaluate_file(path,model,chunksize=100000,predictor=None):
     length=model['length'];pending=np.empty((0,6));pending_rows=np.empty(0,dtype=np.int64)
     previous=None;row_count=0;segment_start=0;segment_rows=0;segments=[];scores=[];ends=[];gap_ms=0.;clock_resets=0
     if length!=100:raise ValueError('v1.1 requires length100')
@@ -37,8 +37,14 @@ def evaluate_file(path,model,chunksize=100000):
             offsets=np.arange(0,len(x)-length+1,50)
             if len(offsets):
                 tensor=np.stack([x[s:s+length] for s in offsets]);f=features(tensor)
-                z=(f-np.array(model['feature_scaler_mean']))/np.array(model['feature_scaler_scale'])
-                scores.extend(expit(z@np.array(model['coefficients'])[0]+model['intercept'][0]).tolist())
+                if predictor is None:
+                    z=(f-np.array(model['feature_scaler_mean']))/np.array(model['feature_scaler_scale'])
+                    prediction=expit(z@np.array(model['coefficients'])[0]+model['intercept'][0])
+                else:
+                    prediction=np.asarray(predictor(f),dtype=float)
+                    if prediction.shape!=(len(f),) or not np.isfinite(prediction).all():
+                        raise ValueError('Generic scorer returned invalid scores')
+                scores.extend(prediction.tolist())
                 ends.extend(ids[offsets+length-1].tolist())
                 used=int(offsets[-1])+50;pending=x[used:];pending_rows=ids[used:]
             else:pending=x;pending_rows=ids
