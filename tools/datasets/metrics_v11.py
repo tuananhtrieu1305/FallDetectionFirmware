@@ -112,6 +112,10 @@ def _trials(p, threshold):
             alarms.append(dict(recording_id=g['rid'], trial_id=row['trial_id'], subject_id=row['subject_id'],
                                segment=g['segment'], frame=frame, kind=kind))
     for rid, row in rows.items():
+        record = next(r for j,r in enumerate(p['records']) if r.get('recording_id',j)==rid)
+        segments = [g for g in p['groups'] if g['rid']==rid]
+        row['excluded_gap_seconds'] = record.get('excluded_gap_seconds',
+            sum(max(0,b['first']-a['first']-a['rows']) for a,b in zip(segments,segments[1:]))/p['fs'])
         frames = matching.get(rid, [])
         row['no_window'] = row['events'] == 1 and row['windows'] == 0
         if frames:
@@ -142,7 +146,8 @@ def _aggregate(rows):
                 extra_alarms_in_detection_interval=sum(r['repeats'] for r in rows),
                 source_nominal_seconds=sum(r['source_seconds'] for r in rows),
                 warmup_nominal_seconds=sum(r['warmup_seconds'] for r in rows),
-                gap_duration_status='Excluded; elapsed gap duration requires verified source timestamps',
+                excluded_gap_nominal_seconds=sum(r['excluded_gap_seconds'] for r in rows),
+                gap_duration_status='Positive missing frame/timestamp intervals excluded; negative clock resets have unknown elapsed duration',
                 events_without_windows=sum(r['no_window'] for r in rows))
 
 

@@ -14,13 +14,16 @@ from run_metrics_v11 import sha, dump
 
 def evaluate_file(path,model,chunksize=100000):
     length=model['length'];pending=np.empty((0,6));pending_rows=np.empty(0,dtype=np.int64)
-    previous=None;row_count=0;segment_start=0;segment_rows=0;segments=[];scores=[];ends=[]
+    previous=None;row_count=0;segment_start=0;segment_rows=0;segments=[];scores=[];ends=[];gap_ms=0.;clock_resets=0
     if length!=100:raise ValueError('v1.1 requires length100')
     for chunk in pd.read_csv(path,chunksize=chunksize):
         imu=chunk[chunk['type']==1]
         if imu.empty:continue
         times=imu.timestamp.to_numpy(float)
         if not np.isfinite(times).all():raise ValueError('Invalid timestamp')
+        deltas=np.diff(np.r_[previous,times]) if previous is not None else np.diff(times)
+        gap_ms+=float(np.maximum(deltas-10,0).sum())
+        clock_resets+=int((deltas<0).sum())
         values=physical_units(imu[['accX','accY','accZ','gyrX','gyrY','gyrZ']].to_numpy(float))
         boundaries=np.r_[0,np.flatnonzero(np.diff(times)!=10)+1,len(times)]
         for start,end in zip(boundaries[:-1],boundaries[1:]):
@@ -43,10 +46,10 @@ def evaluate_file(path,model,chunksize=100000):
         row_count+=len(imu)
     if segment_rows:segments.append(dict(first_frame=segment_start,rows=segment_rows))
     record=dict(recording_id=0,trial_id=Path(path).name,subject_id='unverified_file_identity',activity_key='source_negative',
-                partition='onfield',rows=row_count,event=None,segments=segments)
+                partition='onfield',rows=row_count,event=None,segments=segments,excluded_gap_seconds=gap_ms/1000)
     index=pd.DataFrame(dict(recording_id=np.zeros(len(ends),int),end_frame=ends,y=np.zeros(len(ends),int)))
     m=evaluate([record],index,scores,model['threshold'],bootstrap=0)
-    m.update(sensor_rows=row_count,segments=len(segments),windows=len(ends),label_status='Source-negative; not independently validated',
+    m.update(sensor_rows=row_count,segments=len(segments),windows=len(ends),timestamp_clock_resets=clock_resets,label_status='Source-negative; not independently validated',
              identity_status='Filename is not validated participant identity; no person-level bootstrap',
              alarms_per_source_negative_nominal_hour=m['false_alarms_per_nominal_hour'])
     m.pop('window_metrics',None)
