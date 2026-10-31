@@ -41,8 +41,8 @@ def oof(config,x,index,seed):
     for k in range(5):
         valid=index.partition.eq(f'fold{k}').to_numpy();train=(~valid)&index.y.ge(0).to_numpy()
         m=make_model(config,seed);m.fit(x[train],index.y.to_numpy()[train]);scores[valid]=m.predict_proba(x[valid])[:,1]
-        logs.append(dict(fold=k,train_windows=int(train.sum()),train_subjects=sorted(index.loc[train,'subject_id'].unique()),
-            validation_subjects=sorted(index.loc[valid,'subject_id'].unique()),parameters=parameter_count(m)))
+        logs.append(dict(fold=k,train_windows=int(train.sum()),train_subjects=sorted(index.loc[train,'subject_id'].unique().tolist()),
+            validation_subjects=sorted(index.loc[valid,'subject_id'].unique().tolist()),parameters=parameter_count(m)))
     if not np.isfinite(scores).all():raise ValueError('Incomplete OOF')
     return scores,logs
 
@@ -112,12 +112,17 @@ def run(source,out):
         pd.DataFrame(curve).to_csv(cache/(c['id']+'_threshold_curve.csv'),index=False)
         dump(out/'development_results.json',rows)
         print(json.dumps(dict(id=c['id'],recall=m['recall'],fa_h=m['false_alarms_per_nominal_hour'])),flush=True)
+    dump(out/'development_results.json',rows)
     score_table.to_csv(out/'oof_predictions.csv',index=False)
     eligible=[r for r in rows if r['eligible']];winner=max(eligible,key=ranking)
     # Seed robustness is diagnostic; seed42 ranking remains locked.
     stability=[]
     for family in ['lr','dt','rf']:
-        family_best=max([r for r in eligible if r['family']==family],key=ranking)
+        family_candidates=[r for r in eligible if r['family']==family]
+        if not family_candidates:
+            stability.extend(dict(id=family+'_NONE',seed=seed,recall=None,eligible=False) for seed in [42,43,44])
+            continue
+        family_best=max(family_candidates,key=ranking)
         c=next(c for c in configs if c['id']==family_best['id'])
         stability.append(dict(id=c['id'],seed=42,**{k:family_best[k] for k in ['recall','false_alarms_per_nominal_hour','threshold']}))
         for seed in [43,44]:

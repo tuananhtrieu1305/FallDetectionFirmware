@@ -65,12 +65,12 @@ class BaselineSelection(unittest.TestCase):
             for j in range(12):
                 event=dict(onset=200,impact=249) if j%2 else None
                 part=f'fold{j//2}' if j<10 else 'test'
-                records.append(dict(subject_id=str(j),trial_id=str(j),activity_key='F01' if event else 'ADL',rows=500,frame_first=0,partition=part,event=event))
+                records.append(dict(subject_id='SA'+str(j),trial_id='R'+str(j),activity_key='F01' if event else 'ADL',rows=500,frame_first=0,partition=part,event=event))
                 v=np.zeros((500,6),np.float32);v[:,0]=9.8
                 if event:v[249,:3]=50
                 for start in range(0,401,50):
                     y=window_label(start,start+99,event)
-                    rows.append(dict(recording_id=j,subject_id=str(j),trial_id=str(j),activity_key=records[-1]['activity_key'],partition=part,start_frame=start,end_frame=start+99,y=y))
+                    rows.append(dict(recording_id=j,subject_id='SA'+str(j),trial_id='R'+str(j),activity_key=records[-1]['activity_key'],partition=part,start_frame=start,end_frame=start+99,y=y))
                     tensors.append(v[start:start+100]);labels.append(y)
             (source/'recording_manifest.json').write_text(json.dumps(records))
             pd.DataFrame(rows).to_csv(source/'window_index_100.csv',index=False)
