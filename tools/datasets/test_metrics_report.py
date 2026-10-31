@@ -7,7 +7,7 @@ import pandas as pd
 class ReportContract(unittest.TestCase):
     def test_report_artifacts_and_test_isolation(self):
         from run_metrics_v11 import run
-        with tempfile.TemporaryDirectory() as tmp:
+        with tempfile.TemporaryDirectory(dir=Path(__file__).parent) as tmp:
             root=Path(tmp); source=root/'source';source.mkdir()
             records=[];rows=[]
             for j,(partition,event) in enumerate([('fold0',None),('fold1',dict(onset=199,impact=249)),('test',None),('test',dict(onset=199,impact=249))]):
