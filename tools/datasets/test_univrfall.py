@@ -1,5 +1,8 @@
 """Dataset contracts: no temporal/subject leakage or invented annotations."""
 import sys
+import json
+import hashlib
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -87,6 +90,41 @@ class DatasetContracts(unittest.TestCase):
         result = core.evaluate_sequence([199, 249, 299, 349], [True]*4,
                                         {'onset': 236, 'impact': 319})
         self.assertEqual(result['detected'], 0)
+
+    def test_full_pipeline_reproducible_fixture(self):
+        from build_univrfall import build
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            raw = root / 'raw'
+            raw.mkdir()
+            manifest = {}
+            for i in range(11):
+                for task in [14, 22]:
+                    name = f'UniVrFall_Dataset/laboratory/sensors_data/SA{i:02}/S{i:02}T{task:02}R01.csv'
+                    path = raw / Path(name).name
+                    frame = np.arange(400)
+                    pd.DataFrame(np.column_stack([frame*10, frame, np.full((400, 6), i+1),
+                                                  np.zeros((400, 3))]), columns=[
+                        'TimeStamp(s)', 'FrameCounter', 'AccX', 'AccY', 'AccZ',
+                        'GyrX', 'GyrY', 'GyrZ', 'EulerX', 'EulerY', 'EulerZ']).to_csv(path, index=False)
+                    manifest[name] = dict(file=str(path), sha256=hashlib.sha256(path.read_bytes()).hexdigest())
+                name = f'UniVrFall_Dataset/laboratory/labels_data/SA{i:02}_label.xlsx'
+                path = raw / f'SA{i:02}_label.xlsx'
+                self.annotation(code='F03 (22)', onset=120, impact=160).to_excel(path, index=False)
+                manifest[name] = dict(file=str(path), sha256=hashlib.sha256(path.read_bytes()).hexdigest())
+            (raw/'full_download_manifest.json').write_text(json.dumps(manifest))
+            build(raw, root/'a', expected_csv=22)
+            build(raw, root/'b', expected_csv=22)
+            self.assertEqual((root/'a/splits.json').read_bytes(), (root/'b/splits.json').read_bytes())
+            self.assertEqual((root/'a/tensor_hashes.json').read_bytes(),
+                             (root/'b/tensor_hashes.json').read_bytes())
+            report = json.loads((root/'a/audit.json').read_text())
+            self.assertEqual(report['accepted_trials'], 22)
+            for length in [100, 200, 300]:
+                shard = np.load(root/f'a/windows_{length}.npz')
+                self.assertEqual(shard['X'].shape[1:], (length, 6))
+                self.assertEqual(shard['X'].dtype, np.float32)
+                self.assertTrue(np.isfinite(shard['X']).all())
 
 
 if __name__ == '__main__':
