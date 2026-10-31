@@ -1,5 +1,7 @@
 # Dataset UNIVRFall binary v1
 
+**Để mở dữ liệu đã xử lý trong project, xem [data/README.md](../../data/README.md).** File cần đọc là `data/processed/univrfall_v1/dataset.csv`, chứa đầy đủ 600 giá trị IMU của mỗi window và nhãn; bản NPZ tương ứng nằm cạnh đó. Bản dễ dùng này có 17.813 window nhãn 0/1, dùng fold0 làm validation, giữ nguyên test; 2.873 window IGNORE chỉ giữ trong bản đánh giá liên tục. Các đường dẫn nội bộ Codex bên dưới là nguồn audit ban đầu, không phải nơi duy nhất để đọc dataset.
+
 Mục tiêu: phát hiện khi/vừa ngã, ưu tiên hạn chế bỏ sót, input sáu kênh IMU từ thiết bị đeo lưng dưới. Đây là dataset nghiên cứu theo thời gian danh định; chưa xác nhận hiệu quả trên prototype hoặc người cao tuổi.
 
 Nguồn: [UNIVRFall Zenodo v1, DOI 10.5281/zenodo.18346755](https://zenodo.org/records/18346755), tác giả Ali, Demrozi, Turetta và Pravadelli; giấy phép [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Khi sử dụng/phân phối lại cần ghi nguồn, tác giả, giấy phép và các bước chuyển đổi ở đây. Raw giữ nguyên, ngoài Git. Đã tải đủ **674.726.914 byte**, kiểm MD5 toàn ZIP khớp **d14190e98749bc583f69f1df3e5bafc0**; 1.281 member dữ liệu/nhãn qua CRC và có SHA-256 riêng.

@@ -1,0 +1,6 @@
+# Generated dataset tensors / full CSV stay local; keep navigation and examples visible.
+processed/*
+!processed/univrfall_v1/
+processed/univrfall_v1/*
+!processed/univrfall_v1/README.md
+!processed/univrfall_v1/examples/
