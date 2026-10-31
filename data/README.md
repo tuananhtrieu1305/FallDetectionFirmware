@@ -20,3 +20,5 @@ Tạo lại từ bản đã audit:
 ```powershell
 python tools/datasets/export_dataset.py --source 'C:/Users/Admin/.codex/visualizations/2026/10/31/01a19255-0f78-7130-b6ac-088fb917fbd1/dataset-research/univrfall_binary_v1' --out data/processed/univrfall_v1
 ```
+
+- [Phân tích dữ liệu và lựa chọn baseline](../reports/baseline_selection/README.md)

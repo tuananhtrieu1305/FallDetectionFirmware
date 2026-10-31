@@ -1,0 +1,8 @@
+{
+  "delta_event_recall": 0.010964912280701733,
+  "paired_subject_bootstrap_95": [
+    0.0,
+    0.02466367713004484
+  ],
+  "limitation": "Selected development comparison; conditional predictions; does not account for selection optimism"
+}

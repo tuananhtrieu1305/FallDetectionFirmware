@@ -1,0 +1,14 @@
+split,recording_id,trial_id,subject_id,activity_key,events,detected,fast,delay,false_alarms,hours,active_seconds,longest,early,late,repeats,source_seconds,warmup_seconds,windows,alarm_frames,excluded_gap_seconds,no_window
+development,69,S12T22R01,SA12,F01,1,0,0,,0,0.0,0.0,0.0,0,0,0,5.35,0.99,9,[],0.0,False
+development,102,S14T10R01,SA14,ADL10,0,0,0,,1,0.0012388888888888,0.5,0.5,0,0,0,5.45,0.99,9,[349],0.0,False
+development,872,S31T33R01,SA31,F14,1,0,0,,0,0.0,0.0,0.0,0,0,0,6.39,0.99,11,[],0.0,False
+development,1008,S34T37R01,SA34,F16,1,0,0,,0,0.0,0.0,0.0,0,0,0,7.56,0.99,14,[],0.0,False
+development,1009,S34T38R01,SA34,F17,1,0,0,,0,0.0,0.0,0.0,0,0,0,6.02,0.99,11,[],0.0,False
+development,1080,S36T21R01,SA36,F02,1,0,0,,0,0.0,0.0,0.0,0,0,0,7.49,0.99,13,[],0.0,False
+development,1083,S36T24R01,SA36,F05,1,0,0,,0,0.0,0.0,0.0,0,0,0,7.01,0.99,13,[],0.0,False
+development,1091,S36T32R01,SA36,F13,1,0,0,,0,0.0,0.0,0.0,0,0,0,6.75,0.99,12,[],0.0,False
+development,1093,S36T34R01,SA36,F15,1,0,0,,0,0.0,0.0,0.0,0,0,0,8.14,0.99,15,[],0.0,False
+development,1096,S36T37R01,SA36,F16,1,0,0,,0,0.0,0.0,0.0,0,0,0,7.64,0.99,14,[],0.0,False
+development,1124,S37T21R01,SA37,F02,1,0,0,,0,0.0,0.0,0.0,0,0,0,5.11,0.99,9,[],0.0,False
+development,1125,S37T22R01,SA37,F03,1,0,0,,0,0.0,0.0,0.0,0,1,0,5.03,0.99,9,[399],0.0,False
+development,1127,S37T24R01,SA37,F05,1,0,0,,0,0.0,0.0,0.0,0,1,0,6.37,0.99,11,[499],0.0,False

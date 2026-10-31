@@ -1,0 +1,13 @@
+{
+  "winner": {
+    "id": "lr_C0.1",
+    "family": "lr",
+    "C": 0.1
+  },
+  "threshold": 0.9847727596588258,
+  "seed": 42,
+  "parameters": 41,
+  "test_used_for_selection": false,
+  "experiment_sha256": "125d331c282b341513103cd046d0ff08c14e2d0fea45d9d03b831f503f8fe294",
+  "development_results_sha256": "c59dc92e3796a0406eeb83f11c1309314e2370b6f67c46106ee7f28d93b47e2e"
+}
