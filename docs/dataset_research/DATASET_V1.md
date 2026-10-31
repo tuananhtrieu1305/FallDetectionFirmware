@@ -66,6 +66,14 @@ Baseline dùng 40 đặc trưng: mean/std/min/max/RMS của sáu kênh vật lý
 - Nguồn chưa đại diện đầy đủ người cao tuổi/người phục hồi chức năng. Các ADL tháo thiết bị, làm rơi thiết bị, đai xoay/trượt và nằm nghỉ nhiều giờ còn cần thu bằng prototype.
 - OnField được tải riêng để kiểm tra báo giả với model/ngưỡng đã khóa; chưa đưa vào train hay báo cáo kết quả khi chưa kiểm tra đủ schema/clock/đơn vị. Không dùng các cột `aiOut0/aiOut1` của nguồn làm feature hoặc ground truth.
 
+### OnField: kết quả một phần, chưa phải toàn bộ 18 file
+
+Hai file ngày 2024-11-06 của worker 1000 và 999 đã tải đủ, qua CRC/SHA-256 và được đánh giá. Tổng **4.409.490 dòng IMU**, 88.186 window, **12,248 giờ được giám sát**, có **28 báo động**, tương đương **2,286 báo động/giờ dữ liệu nguồn gán NON_FALL**. Cả hai luồng IMU có timestamp cách đều 10 ms; các bản tin type=2 được đếm rồi loại khỏi input. Không dùng `id` làm bộ đếm IMU vì nó còn đếm bản tin type=2.
+
+Kết quả này khác đáng kể test laboratory và là bằng chứng chuyển miền còn hạn chế. Nhãn NON_FALL của công trường là tuyên bố của nguồn, chưa được nhóm xác nhận độc lập. Model/ngưỡng vẫn giữ nguyên; không chỉnh theo hai file đã xem. Mười sáu file còn lại đang tải, chưa có kết luận cho toàn bộ OnField. Snapshot kết quả nằm ở `v1_onfield_partial.json`; báo cáo sống nằm ở thư mục dataset ngoài Git.
+
+Đánh giá theo chunk giữ nguyên kết quả; mỗi chỗ timestamp IMU lệch bước 10 ms sẽ bắt đầu segment mới và chờ đủ window. Thời lượng báo cáo loại thời gian warmup của mỗi segment. Cache kết quả khóa theo hash raw, hash model và hash code evaluator.
+
 ## Artifact và chạy lại
 
 Thư mục dữ liệu trên máy hiện tại:
@@ -95,9 +103,18 @@ python tools/datasets/build_univrfall.py --raw "$datasetRoot/raw/univrfall" --ou
 python tools/datasets/benchmark_univrfall.py --dataset "$datasetRoot/univrfall_binary_v1"
 python tools/datasets/verify_univrfall.py --raw "$datasetRoot/raw/univrfall" --dataset "$datasetRoot/univrfall_binary_v1"
 python tools/datasets/review_univrfall.py --dataset "$datasetRoot/univrfall_binary_v1"
-python -m unittest discover -s tools/datasets -p test_univrfall.py
+python -m unittest discover -s tools/datasets -p 'test_*.py'
 ```
 
 `acquire_univrfall.py --subset all` tiếp tục tải toàn archive bằng range có cache và backoff, sau đó materialize OnField; không coi cache tải dở là dữ liệu CRC-verified. Trạng thái tải phải xem tiến trình thật và manifest hiện tại.
+
+Trong lúc tiến trình tải còn chạy, có thể materialize riêng file đã cache đủ mà không phát HTTP, rồi đánh giá một phần:
+
+```powershell
+python tools/datasets/acquire_univrfall.py --raw "$datasetRoot/raw/univrfall" --subset all --ready-only
+python tools/datasets/evaluate_onfield.py --raw "$datasetRoot/raw/univrfall" --dataset "$datasetRoot/univrfall_binary_v1" --allow-partial
+```
+
+Khi tải đủ, chạy lại acquisition bản hiện tại để kiểm MD5 toàn ZIP từ các range đã cache, rồi chạy evaluator bỏ `--allow-partial` để yêu cầu đủ 18 file.
 
 Kiểm thử gồm nhãn riêng từng người, nhãn thiếu/trùng/sai frame, biến thể header thời gian, đổi đơn vị, ranh giới window, split lặp lại được, normalizer chỉ dùng train, đếm báo động theo chuỗi và kiểm tra thay toàn bộ feature test không làm đổi lựa chọn cấu hình. Verifier độc lập đối chiếu tất cả raw hash, annotation hợp lệ, sáu normalizer và toàn bộ window với nguồn.

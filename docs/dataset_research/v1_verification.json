@@ -1,0 +1,18 @@
+{
+  "raw_lab_members_hashed": 1263,
+  "all_csv_accounted_for": 1234,
+  "physical_recordings_verified": 1148,
+  "normalizers_no_test_or_validation_leakage": 6,
+  "windows_100_exhaustively_verified": 20686,
+  "windows_200_exhaustively_verified": 18390,
+  "windows_300_exhaustively_verified": 16094,
+  "test_uncertainty": {
+    "event_binomial_95_interval": [
+      0.9689629683068884,
+      1.0
+    ],
+    "zero_false_alarm_poisson_one_sided_95_upper_per_nominal_hour": 7.672129832889446,
+    "limitation": "Events within a person are correlated; binomial interval assumes independent events. Nominal clock; laboratory only."
+  },
+  "status": "PASS"
+}

@@ -90,11 +90,11 @@ class CachedArchive(io.RawIOBase):
         return b''.join(parts)
 
 
-def acquire(root, subset):
+def acquire(root, subset, ready_only=False):
     root.mkdir(parents=True, exist_ok=True)
     manifest_path = root / 'full_download_manifest.json'
     manifest = json.loads(manifest_path.read_text()) if manifest_path.exists() else {}
-    if subset == 'all':
+    if subset == 'all' and not ready_only:
         # Small ranges avoid the extremely slow full-body transfer of this source.
         span=16*BLOCK
         missing = [start for start in range(0, SIZE, span)
@@ -140,7 +140,17 @@ def acquire(root, subset):
             raise ValueError('Full ZIP size/MD5 differs from pinned source')
         (root/'archive_verification.json').write_text(json.dumps(dict(bytes=byte_count,
                        md5=digest.hexdigest(),status='PASS'),indent=2),encoding='utf-8')
-    with zipfile.ZipFile(CachedArchive(root / 'ranges')) as archive:
+    reader=CachedArchive(root/'ranges')
+    if ready_only:
+        original_block=reader.block
+        def cached_only(start):
+            path=root/'ranges'/f'{start:012d}.bin'
+            if not path.exists() or path.stat().st_size!=min(BLOCK,SIZE-start):
+                raise FileNotFoundError(f'Range {start} not complete yet')
+            return original_block(start)
+        reader.block=cached_only
+    materialized=0
+    with zipfile.ZipFile(reader) as archive:
         entries = [e for e in archive.infolist() if not e.is_dir() and
                    ('/laboratory/' in e.filename or subset == 'all')]
         for i, entry in enumerate(entries):
@@ -151,20 +161,30 @@ def acquire(root, subset):
             path = root / 'full_members' / key
             previous = manifest.get(name)
             if not (previous and path.exists() and hashlib.sha256(path.read_bytes()).hexdigest() == previous['sha256']):
+                if ready_only:
+                    start=entry.header_offset//BLOCK*BLOCK
+                    end=entry.header_offset+30+len(entry.filename.encode())+len(entry.extra)+entry.compress_size+32
+                    if any(not (root/'ranges'/f'{p:012d}.bin').exists() or
+                           (root/'ranges'/f'{p:012d}.bin').stat().st_size!=min(BLOCK,SIZE-p)
+                           for p in range(start,min(SIZE,end),BLOCK)):
+                        continue
                 data = archive.read(entry)  # validates ZIP CRC, including cached ranges
                 path.parent.mkdir(parents=True, exist_ok=True)
                 path.write_bytes(data)
                 manifest[name] = dict(file=str(path.resolve()), sha256=hashlib.sha256(data).hexdigest(),
                                       bytes=len(data), crc32=f'{entry.CRC:08x}', crc_verified=True)
                 manifest_path.write_text(json.dumps(manifest, indent=2), encoding='utf-8')
+            materialized+=1
             if (i + 1) % 100 == 0 or '/OnField/' in name:
                 print(json.dumps(dict(materialized=i+1, total=len(entries), member=name)), flush=True)
-    print(json.dumps(dict(subset=subset, materialized=len(entries), manifest=str(manifest_path))), flush=True)
+    print(json.dumps(dict(subset=subset, materialized=materialized, expected=len(entries),
+                         ready_only=ready_only,manifest=str(manifest_path))), flush=True)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--raw', type=Path, required=True)
     parser.add_argument('--subset', choices=['laboratory', 'all'], default='laboratory')
+    parser.add_argument('--ready-only',action='store_true',help='Materialize only complete cached members; no HTTP')
     args = parser.parse_args()
-    acquire(args.raw, args.subset)
+    acquire(args.raw, args.subset,args.ready_only)

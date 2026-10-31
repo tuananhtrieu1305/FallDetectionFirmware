@@ -1,0 +1,8 @@
+{
+  "baseline": "40 physical signal summary features; StandardScaler + balanced LogisticRegression(C=1)",
+  "length": 100,
+  "rule": "development OOF recall then median delay then shorter length at <=1 FA/nominal h",
+  "stride": 50,
+  "test_used_for_selection": false,
+  "threshold": 0.9973402932729418
+}
