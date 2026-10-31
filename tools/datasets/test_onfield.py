@@ -46,6 +46,7 @@ class StreamingContracts(unittest.TestCase):
             outputs=[evaluate_file(path,model,chunksize=n) for n in [1,37,1000]]
             self.assertEqual(outputs[0],outputs[1]);self.assertEqual(outputs[1],outputs[2])
             self.assertEqual(outputs[0]['alarms'],1)
+            self.assertEqual(outputs[0]['alarm_sensor_rows'],[99])
             self.assertEqual(outputs[0]['windows'],9)
             self.assertEqual(outputs[0]['sensor_rows'],501)
             self.assertEqual(outputs[0]['segments'],1)
