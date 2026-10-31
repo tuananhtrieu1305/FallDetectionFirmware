@@ -50,6 +50,7 @@ def evaluate_file(path,model,chunksize=100000):
              identity_status='Filename is not validated participant identity; no person-level bootstrap',
              alarms_per_source_negative_nominal_hour=m['false_alarms_per_nominal_hour'])
     m.pop('window_metrics',None)
+    m.pop('bootstrap_95',None)
     return m
 
 
