@@ -84,4 +84,10 @@ class BaselineSelection(unittest.TestCase):
             score=portable_predict(model,features(np.array(tensors)[-18:]))
             np.testing.assert_allclose(score,pd.read_csv(out/'test_predictions.csv').score,atol=1e-12)
 
+    def test_acc_reference_uses_max_not_min(self):
+        from benchmark_univrfall import features
+        from select_baseline import portable_predict
+        v=np.zeros((1,100,6));v[0,50,0]=20
+        self.assertEqual(portable_predict(dict(family='acc_threshold'),features(v))[0],20)
+
 if __name__=='__main__':unittest.main()
