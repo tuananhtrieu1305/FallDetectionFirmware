@@ -50,7 +50,7 @@ class MetricsContract(unittest.TestCase):
     def test_segments_reset_and_exclude_gap(self):
         from metrics_v11 import evaluate
         r,i,s=self.fixture([1,1,1,1],rows=400)
-        r[0]['segments']=[dict(first_frame=0,rows=199),dict(first_frame=300,rows=199)]
+        r[0]['rows']=398;r[0]['segments']=[dict(first_frame=0,rows=199),dict(first_frame=300,rows=199)]
         i=i.iloc[:4].copy();i['end_frame']=[99,149,399,449]
         m=evaluate(r,i,s,.5,bootstrap=0)
         self.assertEqual(m['false_alarms'],2)
@@ -120,5 +120,17 @@ class AdditionalContracts(unittest.TestCase):
             if change=='config':kwargs['length']=0
             threshold=float('nan') if change=='threshold' else .5
             with self.assertRaises(ValueError):evaluate(r,i,s,threshold,bootstrap=0,**kwargs)
+
+    def test_reject_invalid_geometry_and_window_starts(self):
+        from metrics_v11 import evaluate
+        for mode in ['fractional_end','wrong_start','wrong_rows','outside_event','missing_fields','duplicate_record']:
+            r,i,s=self.fixture()
+            if mode=='fractional_end':i.loc[0,'end_frame']=99.1
+            if mode=='wrong_start':i['start_frame']=0
+            if mode=='wrong_rows':r[0]['segments']=[dict(first_frame=0,rows=399)]
+            if mode=='outside_event':r[0]['event']=dict(onset=500,impact=600)
+            if mode=='missing_fields':i=i.drop(columns='y')
+            if mode=='duplicate_record':r.append(r[0].copy())
+            with self.assertRaises(ValueError):evaluate(r,i,s,.5,bootstrap=0)
 
 if __name__=='__main__': unittest.main()
