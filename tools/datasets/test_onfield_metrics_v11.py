@@ -22,6 +22,28 @@ class OnFieldV11(unittest.TestCase):
             self.assertAlmostEqual(m['alarm_active_fraction'],1)
             self.assertAlmostEqual(m['adl_monitored_nominal_hours'],303/100/3600)
             self.assertAlmostEqual(m['longest_positive_run_nominal_s'],1.52)
-            self.assertEqual(m['bootstrap_95']['subjects'],1) # internal file identity, not person-level CI
+            self.assertNotIn('bootstrap_95',m) # no validated participant identity
+
+    def test_full_run_cache_and_reject_incomplete(self):
+        import json
+        from unittest.mock import patch
+        from onfield_metrics_v11 import run
+        from run_metrics_v11 import sha
+        with tempfile.TemporaryDirectory(dir=Path(__file__).parent) as tmp:
+            root=Path(tmp);raw=root/'raw';source=root/'source';out=root/'out'
+            for p in [raw,source,out]:p.mkdir()
+            csv=raw/'tiny.csv'
+            pd.DataFrame(dict(timestamp=np.arange(200)*10,type=1,accX=1000,accY=0,accZ=0,gyrX=0,gyrY=0,gyrZ=0)).to_csv(csv,index=False)
+            model=dict(length=100,threshold=.4,feature_scaler_mean=[0]*40,feature_scaler_scale=[1]*40,coefficients=[[0]*40],intercept=[0])
+            (source/'baseline_model.json').write_text(json.dumps(model))
+            (out/'selection_lock.json').write_text(json.dumps(dict(threshold=.4)))
+            manifest={'X/OnField/session/f%d.csv'%i:dict(file=str(csv),sha256=sha(csv)) for i in range(18)}
+            mpath=raw/'full_download_manifest.json';mpath.write_text(json.dumps(manifest))
+            a=run(raw,source,out)
+            self.assertEqual(a['alarms'],18)
+            with patch('onfield_metrics_v11.evaluate_file',side_effect=AssertionError('cache miss')):
+                self.assertEqual(a,run(raw,source,out))
+            manifest.pop(next(iter(manifest)));mpath.write_text(json.dumps(manifest))
+            with self.assertRaises(ValueError):run(raw,source,out)
 
 if __name__=='__main__':unittest.main()
