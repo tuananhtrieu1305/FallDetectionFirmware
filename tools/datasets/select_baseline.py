@@ -66,7 +66,7 @@ def portable_predict(model,x):
     if model['family']=='lr':
         from scipy.special import expit
         return expit(((x-np.array(model['mean']))/np.array(model['scale']))@np.array(model['coef'])+model['intercept'])
-    if model['family']=='acc_threshold':return x[:,22] # max acc_norm: block max offset16 + channel6
+    if model['family']=='acc_threshold':return x[:,30] # max acc_norm: block max offset24 + channel6
     total=np.zeros(len(x))
     for tree in model['trees']:
         node=np.zeros(len(x),int)
@@ -100,7 +100,7 @@ def run(source,out):
             score=np.load(path)['score'];meta=json.loads(logpath.read_text());folds=meta['folds'];train_s=meta['train_seconds']
         else:
             t=time.perf_counter()
-            if c['family']=='acc_threshold':score=x[:,22].copy();folds=[]
+            if c['family']=='acc_threshold':score=x[:,30].copy();folds=[]
             else:score,folds=oof(c,x,index,42)
             train_s=time.perf_counter()-t;np.savez_compressed(path,score=score);dump(logpath,dict(key=key,folds=folds,train_seconds=train_s))
         score_table[c['id']]=score
