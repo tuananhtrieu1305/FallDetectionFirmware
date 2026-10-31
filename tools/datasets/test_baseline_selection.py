@@ -31,4 +31,24 @@ class BaselineSelection(unittest.TestCase):
         b=dict(a,parameters=100,threshold=.9,id='b')
         self.assertGreater(ranking(a),ranking(b))
 
+    def test_portable_models_match_sklearn(self):
+        from select_baseline import configurations,make_model,tree_export,portable_predict
+        rng=np.random.default_rng(42);x=rng.normal(size=(100,40));y=(x[:,0]*x[:,1]>0).astype(int)
+        for c in [configurations()[0],configurations()[3],configurations()[-1]]:
+            m=make_model(c,42);m.fit(x,y);p=dict(family=c['family'])
+            if c['family']=='lr':p.update(mean=m[0].mean_.tolist(),scale=m[0].scale_.tolist(),coef=m[-1].coef_[0].tolist(),intercept=float(m[-1].intercept_[0]))
+            else:p['trees']=tree_export(m)
+            np.testing.assert_allclose(portable_predict(p,x),m.predict_proba(x)[:,1],atol=1e-12)
+
+    def test_onfield_accepts_generic_scorer(self):
+        import tempfile
+        from pathlib import Path
+        from onfield_metrics_v11 import evaluate_file
+        with tempfile.TemporaryDirectory(dir=Path(__file__).parent) as tmp:
+            path=Path(tmp)/'field.csv'
+            pd.DataFrame(dict(timestamp=np.arange(200)*10,type=1,accX=1000,accY=0,accZ=0,gyrX=0,gyrY=0,gyrZ=0)).to_csv(path,index=False)
+            m=evaluate_file(path,dict(length=100,threshold=.5),predictor=lambda f:np.ones(len(f)))
+            self.assertEqual(m['false_alarms'],1)
+            self.assertAlmostEqual(m['alarm_active_fraction'],1)
+
 if __name__=='__main__':unittest.main()
