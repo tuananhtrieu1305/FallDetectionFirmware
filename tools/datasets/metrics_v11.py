@@ -27,6 +27,8 @@ def prepare(records, index, scores, length=100, stride=50, fs=100):
         raise ValueError('Missing prediction columns')
     if not index.y.isin([-1, 0, 1]).all():
         raise ValueError('Invalid label')
+    if 'start_frame' in index and not (index.start_frame == index.end_frame-length+1).all():
+        raise ValueError('Invalid window start')
     keys, groups, offset = [], [], 0
     seen = set()
     for position, record in enumerate(records):
@@ -36,6 +38,11 @@ def prepare(records, index, scores, length=100, stride=50, fs=100):
         seen.add(rid)
         event = record.get('event')
         segments = record.get('segments', [dict(first_frame=record.get('frame_first', 0), rows=record['rows'])])
+        if sum(s['rows'] for s in segments) != record['rows']:
+            raise ValueError('Segment lengths disagree with recording rows')
+        if event and (not segments or event['onset'] < segments[0]['first_frame'] or
+                      event['impact'] >= segments[-1]['first_frame']+segments[-1]['rows']):
+            raise ValueError('Event outside recording')
         previous_end = None
         for segment_id, seg in enumerate(segments):
             first, n = seg['first_frame'], seg['rows']
