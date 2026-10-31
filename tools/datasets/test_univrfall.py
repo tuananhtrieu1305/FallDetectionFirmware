@@ -93,7 +93,7 @@ class DatasetContracts(unittest.TestCase):
 
     def test_full_pipeline_reproducible_fixture(self):
         from build_univrfall import build
-        with tempfile.TemporaryDirectory() as temp:
+        with tempfile.TemporaryDirectory(dir=Path(__file__).parent) as temp:
             root = Path(temp)
             raw = root / 'raw'
             raw.mkdir()
@@ -105,12 +105,12 @@ class DatasetContracts(unittest.TestCase):
                     frame = np.arange(400)
                     pd.DataFrame(np.column_stack([frame*10, frame, np.full((400, 6), i+1),
                                                   np.zeros((400, 3))]), columns=[
-                        'TimeStamp(s)', 'FrameCounter', 'AccX', 'AccY', 'AccZ',
+                        'Unnamed: 0' if i == 0 else 'TimeStamp(s)', 'FrameCounter', 'AccX', 'AccY', 'AccZ',
                         'GyrX', 'GyrY', 'GyrZ', 'EulerX', 'EulerY', 'EulerZ']).to_csv(path, index=False)
                     manifest[name] = dict(file=str(path), sha256=hashlib.sha256(path.read_bytes()).hexdigest())
                 name = f'UniVrFall_Dataset/laboratory/labels_data/SA{i:02}_label.xlsx'
                 path = raw / f'SA{i:02}_label.xlsx'
-                self.annotation(code='F03 (22)', onset=120, impact=160).to_excel(path, index=False)
+                self.annotation(code='F03 (22)', onset=200, impact=250).to_excel(path, index=False)
                 manifest[name] = dict(file=str(path), sha256=hashlib.sha256(path.read_bytes()).hexdigest())
             (raw/'full_download_manifest.json').write_text(json.dumps(manifest))
             build(raw, root/'a', expected_csv=22)
@@ -120,11 +120,41 @@ class DatasetContracts(unittest.TestCase):
                              (root/'b/tensor_hashes.json').read_bytes())
             report = json.loads((root/'a/audit.json').read_text())
             self.assertEqual(report['accepted_trials'], 22)
+            for record in json.loads((root/'a/recording_manifest.json').read_text()):
+                self.assertTrue(record['source_member'].endswith('.csv'))
             for length in [100, 200, 300]:
-                shard = np.load(root/f'a/windows_{length}.npz')
-                self.assertEqual(shard['X'].shape[1:], (length, 6))
-                self.assertEqual(shard['X'].dtype, np.float32)
-                self.assertTrue(np.isfinite(shard['X']).all())
+                with np.load(root/f'a/windows_{length}.npz') as shard:
+                    self.assertEqual(shard['X'].shape[1:], (length, 6))
+                    self.assertEqual(shard['X'].dtype, np.float32)
+                    self.assertTrue(np.isfinite(shard['X']).all())
+            # Poison only held-out test features: selection must remain unchanged.
+            from benchmark_univrfall import benchmark
+            benchmark(root/'a')
+            for length in [100,200,300]:
+                test=pd.read_csv(root/f'b/window_index_{length}.csv').partition.eq('test').to_numpy()
+                with np.load(root/f'b/windows_{length}.npz') as shard:
+                    x,y=shard['X'].copy(),shard['y'].copy()
+                x[test]=100000
+                np.savez_compressed(root/f'b/windows_{length}.npz',X=x,y=y)
+            benchmark(root/'b')
+            self.assertEqual((root/'a/selection_lock.json').read_bytes(),
+                             (root/'b/selection_lock.json').read_bytes())
+
+    def test_benchmark_metrics_match_independent_event_contract(self):
+        from benchmark_univrfall import event_metrics, features
+        x = np.zeros((1,100,6));x[:,:,0]=3;x[:,:,1]=4
+        f = features(x)
+        self.assertEqual(f.shape,(1,40))
+        self.assertEqual(f[0,6],5)
+        index=pd.DataFrame({'recording_id':[0]*4+[1]*4,
+                            'end_frame':[199,249,299,349]*2})
+        recordings=[dict(trial_id='a',subject_id='s',activity_key='ADL14',event=None,rows=400),
+                    dict(trial_id='b',subject_id='s',activity_key='F01',
+                         event={'onset':236,'impact':319},rows=400)]
+        metrics=event_metrics(index,[1,1,0,1,0,0,0,1],.5,recordings,200,details=True)
+        self.assertEqual(metrics['false_alarms'],2)
+        self.assertEqual(metrics['detected'],1)
+        self.assertAlmostEqual(metrics['median_delay_nominal_s'],.3)
 
 
 if __name__ == '__main__':
