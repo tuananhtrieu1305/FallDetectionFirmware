@@ -1,0 +1,127 @@
+{
+  "protocol": "1.1",
+  "files": 18,
+  "threshold": 0.9967136154752128,
+  "threshold_retuned": false,
+  "alarms": 40,
+  "monitored_nominal_hours": 54.88224166666666,
+  "alarms_per_source_negative_nominal_hour": 0.7288332033327721,
+  "alarm_active_fraction": 0.0002378830594211131,
+  "longest_positive_run_nominal_s": 3.0,
+  "poisson_one_sided_95_upper_per_hour": 0.9487471271925441,
+  "sensor_rows": 19759785,
+  "windows": 395163,
+  "person_bootstrap": "NOT APPLICABLE: filename IDs unverified",
+  "recall": null,
+  "label_status": "Source-negative assertion, not independently validated; nominal time; do not merge with laboratory FA/h",
+  "per_file": [
+    {
+      "source_member": "UniVrFall_Dataset/OnField/20241106/20241106_1000.csv",
+      "alarms": 31,
+      "hours": 11.45235,
+      "alarm_active_fraction": 0.0008974383229448784
+    },
+    {
+      "source_member": "UniVrFall_Dataset/OnField/20241106/20241106_999.csv",
+      "alarms": 0,
+      "hours": 0.7956833333333333,
+      "alarm_active_fraction": 0.0
+    },
+    {
+      "source_member": "UniVrFall_Dataset/OnField/20241223/20241223_1001.csv",
+      "alarms": 1,
+      "hours": 3.39055,
+      "alarm_active_fraction": 4.0963527713465036e-05
+    },
+    {
+      "source_member": "UniVrFall_Dataset/OnField/20241223/20241223_1002.csv",
+      "alarms": 1,
+      "hours": 3.3857000000000004,
+      "alarm_active_fraction": 4.102220778240507e-05
+    },
+    {
+      "source_member": "UniVrFall_Dataset/OnField/20250108/20250108_1001.csv",
+      "alarms": 1,
+      "hours": 1.1434916666666668,
+      "alarm_active_fraction": 0.00024292068396747775
+    },
+    {
+      "source_member": "UniVrFall_Dataset/OnField/20250108/20250108_1002.csv",
+      "alarms": 0,
+      "hours": 1.1228500000000001,
+      "alarm_active_fraction": 0.0
+    },
+    {
+      "source_member": "UniVrFall_Dataset/OnField/20250109/20250109_1003.csv",
+      "alarms": 0,
+      "hours": 2.104433333333333,
+      "alarm_active_fraction": 0.0
+    },
+    {
+      "source_member": "UniVrFall_Dataset/OnField/20250109/20250109_1004.csv",
+      "alarms": 0,
+      "hours": 2.0885166666666666,
+      "alarm_active_fraction": 0.0
+    },
+    {
+      "source_member": "UniVrFall_Dataset/OnField/20250110/20250110_1005.csv",
+      "alarms": 0,
+      "hours": 2.147641666666667,
+      "alarm_active_fraction": 0.0
+    },
+    {
+      "source_member": "UniVrFall_Dataset/OnField/20250110/20250110_1006.csv",
+      "alarms": 0,
+      "hours": 2.101475,
+      "alarm_active_fraction": 0.0
+    },
+    {
+      "source_member": "UniVrFall_Dataset/OnField/20250115/20250115_1007.csv",
+      "alarms": 2,
+      "hours": 4.12935,
+      "alarm_active_fraction": 0.0002690765159434563
+    },
+    {
+      "source_member": "UniVrFall_Dataset/OnField/20250115/20250115_1008.csv",
+      "alarms": 3,
+      "hours": 4.151891666666667,
+      "alarm_active_fraction": 0.0002007117237724973
+    },
+    {
+      "source_member": "UniVrFall_Dataset/OnField/20250117/20250117_1009.csv",
+      "alarms": 0,
+      "hours": 4.386475,
+      "alarm_active_fraction": 0.0
+    },
+    {
+      "source_member": "UniVrFall_Dataset/OnField/20250124/20250124_1005.csv",
+      "alarms": 1,
+      "hours": 3.4629749999999997,
+      "alarm_active_fraction": 8.021362492590266e-05
+    },
+    {
+      "source_member": "UniVrFall_Dataset/OnField/20250124/20250124_1006.csv",
+      "alarms": 0,
+      "hours": 3.5350166666666665,
+      "alarm_active_fraction": 0.0
+    },
+    {
+      "source_member": "UniVrFall_Dataset/OnField/20250129/20250129_1003.csv",
+      "alarms": 0,
+      "hours": 2.8281,
+      "alarm_active_fraction": 0.0
+    },
+    {
+      "source_member": "UniVrFall_Dataset/OnField/20250129/20250129_1005.csv",
+      "alarms": 0,
+      "hours": 0.9985166666666666,
+      "alarm_active_fraction": 0.0
+    },
+    {
+      "source_member": "UniVrFall_Dataset/OnField/20250218/20250218_1010.csv",
+      "alarms": 0,
+      "hours": 1.6572250000000002,
+      "alarm_active_fraction": 0.0
+    }
+  ]
+}

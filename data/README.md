@@ -6,6 +6,8 @@
 - [Mở ví dụ một window ngã — 100 dòng, 6 kênh](processed/univrfall_v1/examples/fall_window.csv)
 - [Mở ví dụ một window không ngã](processed/univrfall_v1/examples/non_fall_window.csv)
 - [Cách đọc file và nạp vào model](processed/univrfall_v1/README.md)
+- [Metric và quy tắc đánh giá model đã chốt](../docs/dataset_research/METRICS_PROTOCOL.md)
+- [Kết quả kiểm tra bộ metric và baseline v1.1](../reports/metrics_v1_1/README.md)
 
 CSV có một dòng cho mỗi window, gồm 600 giá trị IMU, nhãn, người và tập chia. NPZ chứa cùng dữ liệu dưới dạng ma trận để train nhanh hơn.
 

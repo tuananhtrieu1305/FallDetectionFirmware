@@ -1,0 +1,130 @@
+{
+  "status": "PASS",
+  "protocol": "1.1",
+  "laboratory_legacy_parity": true,
+  "onfield_files_verified": 18,
+  "source_predictions_sha256": "15d90b2bf04f6378223e0315c0ea8b58890218186552ac8be87b5629cfd90ece",
+  "artifact_hashes": {
+    "README.md": "cfdb9be8c8379e9a2949f0105599dd47eb035ec390b9154b7a786c23b59a6cd9",
+    "metrics.json": "4ab5f463bf0ade4f237410ed3dad867795509d092c8d807f80f1113e2698f70f",
+    "report.md": "8b6083085b520e7c97f887dee312f80701781a0749ff1cb4ed921781e92ca077",
+    "events.csv": "d40201ee09409cc4b7b38a02887bfbb4b674e965f61e2007b05aa38a8b32af87",
+    "alarms.csv": "687a3142a1761e447da66536fcdc3d98c8e74c4eddba278fe12b3849bae262c6",
+    "by_subject.csv": "17af4604d8fd7e159ff34a6d6d241a7c0b44a21d615c5b172af9bc911e029d9e",
+    "by_activity.csv": "88d3f8ad8aec1adb5f4e47bc66a131098b8cc480bcb6f27f04e764f474c838de",
+    "threshold_curve.csv": "16dd010e8eb69683e298a4a32cf08b7cfbafb51d415f1bfcc10fa7a539693653",
+    "selection_lock.json": "524b51488ed110230c9e6505d5b4c305f37faf81dbce5dd78b3774656d45492f"
+  },
+  "onfield": [
+    {
+      "source_member": "UniVrFall_Dataset/OnField/20241106/20241106_1000.csv",
+      "chunk_invariance": "PASS",
+      "legacy_counts_exposure_alarm_rows": "PASS",
+      "raw_sha256": "b05d6beb86ecf3cfdf5a7b6870705a27d745ab7d240eacf51503074f3d8026d7"
+    },
+    {
+      "source_member": "UniVrFall_Dataset/OnField/20241106/20241106_999.csv",
+      "chunk_invariance": "PASS",
+      "legacy_counts_exposure_alarm_rows": "PASS",
+      "raw_sha256": "2f7e2a9cbdb2ec7e8e0102eea2cda445a77ff0a1f37065ea500b47f1a1f8c702"
+    },
+    {
+      "source_member": "UniVrFall_Dataset/OnField/20241223/20241223_1001.csv",
+      "chunk_invariance": "PASS",
+      "legacy_counts_exposure_alarm_rows": "PASS",
+      "raw_sha256": "1c4f4272334e5a51f37ffeb136a619d2a555d01b28e1fb6f457bff7f72a1f277"
+    },
+    {
+      "source_member": "UniVrFall_Dataset/OnField/20241223/20241223_1002.csv",
+      "chunk_invariance": "PASS",
+      "legacy_counts_exposure_alarm_rows": "PASS",
+      "raw_sha256": "f62bb0d9aca6eb802d8bae048de26f1213665a7f1861db717ce47f7252ee9fff"
+    },
+    {
+      "source_member": "UniVrFall_Dataset/OnField/20250108/20250108_1001.csv",
+      "chunk_invariance": "PASS",
+      "legacy_counts_exposure_alarm_rows": "PASS",
+      "raw_sha256": "b2f0df478a900aa0bb1adec42e7372b64602c56d793ad669be2180fb1b2988af"
+    },
+    {
+      "source_member": "UniVrFall_Dataset/OnField/20250108/20250108_1002.csv",
+      "chunk_invariance": "PASS",
+      "legacy_counts_exposure_alarm_rows": "PASS",
+      "raw_sha256": "8791ca72674ac8bc72d11f2d32c6a46b7d4d0757173b7b7d48b33e0e920a7305"
+    },
+    {
+      "source_member": "UniVrFall_Dataset/OnField/20250109/20250109_1003.csv",
+      "chunk_invariance": "PASS",
+      "legacy_counts_exposure_alarm_rows": "PASS",
+      "raw_sha256": "31da4beeff713d82b44b536b8802fc4937642852e8c17dc6541362ef5d9c1162"
+    },
+    {
+      "source_member": "UniVrFall_Dataset/OnField/20250109/20250109_1004.csv",
+      "chunk_invariance": "PASS",
+      "legacy_counts_exposure_alarm_rows": "PASS",
+      "raw_sha256": "0982139d0cc5710d2f76fa0cd8320f8a3ccf701bfe78a3967d419caa07002518"
+    },
+    {
+      "source_member": "UniVrFall_Dataset/OnField/20250110/20250110_1005.csv",
+      "chunk_invariance": "PASS",
+      "legacy_counts_exposure_alarm_rows": "PASS",
+      "raw_sha256": "7b1d41c86447ca94c0ad2e4b2ec8d490eda4d5207fdaf350f184e72452665509"
+    },
+    {
+      "source_member": "UniVrFall_Dataset/OnField/20250110/20250110_1006.csv",
+      "chunk_invariance": "PASS",
+      "legacy_counts_exposure_alarm_rows": "PASS",
+      "raw_sha256": "d25b95a7fc16fcc0d0f123591a0adedd82ac19791b7f685d353b9d12e0f45da7"
+    },
+    {
+      "source_member": "UniVrFall_Dataset/OnField/20250115/20250115_1007.csv",
+      "chunk_invariance": "PASS",
+      "legacy_counts_exposure_alarm_rows": "PASS",
+      "raw_sha256": "268c0014d9feba6d1ac52497fe0ca59dd11ca909971744c81bc20757b0dc0afa"
+    },
+    {
+      "source_member": "UniVrFall_Dataset/OnField/20250115/20250115_1008.csv",
+      "chunk_invariance": "PASS",
+      "legacy_counts_exposure_alarm_rows": "PASS",
+      "raw_sha256": "99a33ab55cbee3789540fecf3e22c2209f7f5d9992f61980fbc43791e9f5fe69"
+    },
+    {
+      "source_member": "UniVrFall_Dataset/OnField/20250117/20250117_1009.csv",
+      "chunk_invariance": "PASS",
+      "legacy_counts_exposure_alarm_rows": "PASS",
+      "raw_sha256": "70e781658b7dd39f25253eec78098ef1177053dc9a9ae0397499a9b10f785ba0"
+    },
+    {
+      "source_member": "UniVrFall_Dataset/OnField/20250124/20250124_1005.csv",
+      "chunk_invariance": "PASS",
+      "legacy_counts_exposure_alarm_rows": "PASS",
+      "raw_sha256": "d34136f63277ec84d7464083204c65924f452febd0739b3f172e5952fb8887d0"
+    },
+    {
+      "source_member": "UniVrFall_Dataset/OnField/20250124/20250124_1006.csv",
+      "chunk_invariance": "PASS",
+      "legacy_counts_exposure_alarm_rows": "PASS",
+      "raw_sha256": "0a5b23beec2d559290ae092384dd8eece320dd45b3b443c717fc0a7b94079afe"
+    },
+    {
+      "source_member": "UniVrFall_Dataset/OnField/20250129/20250129_1003.csv",
+      "chunk_invariance": "PASS",
+      "legacy_counts_exposure_alarm_rows": "PASS",
+      "raw_sha256": "da3772fbe9c3282ea1fc68ced0c63f275f44e30a6e5d846eef15bb768587546c"
+    },
+    {
+      "source_member": "UniVrFall_Dataset/OnField/20250129/20250129_1005.csv",
+      "chunk_invariance": "PASS",
+      "legacy_counts_exposure_alarm_rows": "PASS",
+      "raw_sha256": "4da46edfc2b3ff9679289b855db594b907f0f0114cd1a1e24a4bb831d03dfece"
+    },
+    {
+      "source_member": "UniVrFall_Dataset/OnField/20250218/20250218_1010.csv",
+      "chunk_invariance": "PASS",
+      "legacy_counts_exposure_alarm_rows": "PASS",
+      "raw_sha256": "62f2a53f36f0d9ab3422b7c0c8e985d05b12854df0bce888f77780d6fec6a266"
+    }
+  ],
+  "full_source_field_hours": 54.88224166666666,
+  "notes": "No training; frozen predictions; source clock nominal"
+}

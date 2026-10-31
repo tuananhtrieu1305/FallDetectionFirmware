@@ -1,5 +1,7 @@
 # Dataset UNIVRFall binary v1
 
+Quy tắc đánh giá cho thí nghiệm tiếp theo: [METRICS_PROTOCOL.md](METRICS_PROTOCOL.md). Bộ tính v1.1 đã có báo cáo tại [reports/metrics_v1_1](../../reports/metrics_v1_1/README.md); kết quả baseline bên dưới giữ nguyên protocol v1.
+
 **Để mở dữ liệu đã xử lý trong project, xem [data/README.md](../../data/README.md).** File cần đọc là `data/processed/univrfall_v1/dataset.csv`, chứa đầy đủ 600 giá trị IMU của mỗi window và nhãn; bản NPZ tương ứng nằm cạnh đó. Bản dễ dùng này có 17.813 window nhãn 0/1, dùng fold0 làm validation, giữ nguyên test; 2.873 window IGNORE chỉ giữ trong bản đánh giá liên tục. Các đường dẫn nội bộ Codex bên dưới là nguồn audit ban đầu, không phải nơi duy nhất để đọc dataset.
 
 Mục tiêu: phát hiện khi/vừa ngã, ưu tiên hạn chế bỏ sót, input sáu kênh IMU từ thiết bị đeo lưng dưới. Đây là dataset nghiên cứu theo thời gian danh định; chưa xác nhận hiệu quả trên prototype hoặc người cao tuổi.

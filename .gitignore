@@ -16,3 +16,6 @@ Thumbs.db
 .vscode/settings.json
 
 bmi270_temp/
+
+# Local Python coverage databases
+.coverage*
