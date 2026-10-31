@@ -60,7 +60,7 @@ def run(out):
     'Test/OnField từng được xem trong baseline trước; đây là benchmark cố định, chưa phải dữ liệu xác nhận cuối mới. Chi phí máy tính: [host_cost.json](host_cost.json); RAM và latency ESP32 NOT MEASURED.',
     '', '## Quyết định',
     'Giữ LR C=0.1 +40feature làm baseline chính của vòng so sánh. Ưu tiên xác nhận acc-only và thu ADL có nhãn từ đúng phần cứng/vị trí đeo để kiểm tra lệch miền. Chỉ thử CNN khi lỗi còn lại tạo giả thuyết rõ về lợi ích học thứ tự thời gian; hiện chưa có lý do bắt buộc chuyển CNN.']
-    (out/'REPORT.md').write_text('\n'.join(text)+'\n',encoding='utf-8')
+    (out/'REPORT.md').write_text('\n'.join(line.rstrip() for line in text)+'\n',encoding='utf-8')
     (out/'README.md').write_text('''# Phân tích dữ liệu và chọn baseline
 
 - [Kết luận và bảng so sánh](REPORT.md), [EDA trước train](EDA.md)

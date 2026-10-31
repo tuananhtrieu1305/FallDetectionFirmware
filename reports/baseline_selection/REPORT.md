@@ -30,7 +30,7 @@ Seed42/43/44: [seed_stability.csv](seed_stability.csv). LR giữ nguyên kết q
 
 ## Ablation và lỗi còn lại
 Chẩn đoán LR C=1: acc-only recall 98.90%, gyro-only 61.84%. Acc-only cao hơn nhóm40feature cho thấy cần kiểm chứng thêm lựa chọn cảm biến/đặc trưng trước khi tăng độ phức tạp. Đây là chẩn đoán ngoài grid chính; chưa tự thay baseline được khóa. Không suy ra nên bỏ gyro trên phần cứng thật chỉ từ dataset này.
-Trong 7 lần ngã bỏ sót, 4 thuộc SA36; một cảnh báo nhầm là S22T15R01 (ADL15, collapse into chair). Đồ thị lỗi có xung gia tốc nhưng gyro tương đối thấp ở một số ca; đây là quan sát, chưa chứng minh nguyên nhân. Nên kiểm tra giả thuyết trọng số gyro/đặc trưng và khả năng khái quát theo người trước khi tăng độ phức tạp. 
+Trong 7 lần ngã bỏ sót, 4 thuộc SA36; một cảnh báo nhầm là S22T15R01 (ADL15, collapse into chair). Đồ thị lỗi có xung gia tốc nhưng gyro tương đối thấp ở một số ca; đây là quan sát, chưa chứng minh nguyên nhân. Nên kiểm tra giả thuyết trọng số gyro/đặc trưng và khả năng khái quát theo người trước khi tăng độ phức tạp.
 Xem [các lỗi OOF](selected_oof_errors.csv), [đồ thị lỗi](plots/selected_oof_errors.png), [tương quan](plots/feature_correlation.png), [dịch chuyển theo người](plots/subject_feature_shift.png), [trước/sau impact](pre_post_impact.csv). Không suy ra nguyên nhân tư thế từ IMU đơn thuần. Nhóm lỗi theo người/hoạt động nằm trong development_by_subject_id.csv và development_by_activity_key.csv.
 
 ## Benchmark sau khóa lựa chọn
