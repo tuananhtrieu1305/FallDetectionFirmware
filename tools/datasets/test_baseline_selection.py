@@ -51,4 +51,37 @@ class BaselineSelection(unittest.TestCase):
             self.assertEqual(m['false_alarms'],1)
             self.assertAlmostEqual(m['alarm_active_fraction'],1)
 
+    def test_complete_comparison_fixture(self):
+        import json,tempfile
+        from pathlib import Path
+        from select_baseline import run,portable_predict
+        from benchmark_univrfall import features
+        from univrfall_core import window_label
+        with tempfile.TemporaryDirectory(dir=Path(__file__).parent) as tmp:
+            root=Path(tmp);source=root/'source';out=root/'out';source.mkdir();out.mkdir()
+            (out/'EDA.md').write_text('Synthetic development EDA fixture')
+            (source/'splits.json').write_text('{}')
+            records=[];rows=[];tensors=[];labels=[]
+            for j in range(12):
+                event=dict(onset=200,impact=249) if j%2 else None
+                part=f'fold{j//2}' if j<10 else 'test'
+                records.append(dict(subject_id=str(j),trial_id=str(j),activity_key='F01' if event else 'ADL',rows=500,frame_first=0,partition=part,event=event))
+                v=np.zeros((500,6),np.float32);v[:,0]=9.8
+                if event:v[249,:3]=50
+                for start in range(0,401,50):
+                    y=window_label(start,start+99,event)
+                    rows.append(dict(recording_id=j,subject_id=str(j),trial_id=str(j),activity_key=records[-1]['activity_key'],partition=part,start_frame=start,end_frame=start+99,y=y))
+                    tensors.append(v[start:start+100]);labels.append(y)
+            (source/'recording_manifest.json').write_text(json.dumps(records))
+            pd.DataFrame(rows).to_csv(source/'window_index_100.csv',index=False)
+            np.savez_compressed(source/'windows_100.npz',X=np.array(tensors),y=labels)
+            result=run(source,out)
+            self.assertTrue(result['eligible'])
+            self.assertEqual(len(json.loads((out/'development_results.json').read_text())),14)
+            self.assertFalse(json.loads((out/'selection_lock.json').read_text())['test_used_for_selection'])
+            self.assertEqual(len(pd.read_csv(out/'seed_stability.csv')),9)
+            model=json.loads((out/'selected_model.json').read_text())
+            score=portable_predict(model,features(np.array(tensors)[-18:]))
+            np.testing.assert_allclose(score,pd.read_csv(out/'test_predictions.csv').score,atol=1e-12)
+
 if __name__=='__main__':unittest.main()
