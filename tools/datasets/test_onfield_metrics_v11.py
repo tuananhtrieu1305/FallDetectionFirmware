@@ -19,6 +19,7 @@ class OnFieldV11(unittest.TestCase):
             self.assertEqual(results[0],results[1]);self.assertEqual(results[1],results[2])
             m=results[0];self.assertEqual(m['false_alarms'],2)
             self.assertEqual(m['sensor_rows'],501)
+            self.assertAlmostEqual(m['excluded_gap_nominal_seconds'],.1)
             self.assertAlmostEqual(m['alarm_active_fraction'],1)
             self.assertAlmostEqual(m['adl_monitored_nominal_hours'],303/100/3600)
             self.assertAlmostEqual(m['longest_positive_run_nominal_s'],1.52)

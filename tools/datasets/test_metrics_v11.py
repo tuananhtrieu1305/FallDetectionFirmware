@@ -54,6 +54,7 @@ class MetricsContract(unittest.TestCase):
         i=i.iloc[:4].copy();i['end_frame']=[99,149,399,449]
         m=evaluate(r,i,s,.5,bootstrap=0)
         self.assertEqual(m['false_alarms'],2)
+        self.assertAlmostEqual(m['excluded_gap_nominal_seconds'],1.01)
         self.assertAlmostEqual(m['alarm_active_fraction'],1)
         self.assertAlmostEqual(m['adl_monitored_nominal_hours'],2.0/3600)
 
@@ -125,7 +126,8 @@ class AdditionalContracts(unittest.TestCase):
         from metrics_v11 import evaluate
         for mode in ['fractional_end','wrong_start','wrong_rows','outside_event','missing_fields','duplicate_record']:
             r,i,s=self.fixture()
-            if mode=='fractional_end':i.loc[0,'end_frame']=99.1
+            if mode=='fractional_end':
+                i['end_frame']=i.end_frame.astype(float);i.loc[0,'end_frame']=99.1
             if mode=='wrong_start':i['start_frame']=0
             if mode=='wrong_rows':r[0]['segments']=[dict(first_frame=0,rows=399)]
             if mode=='outside_event':r[0]['event']=dict(onset=500,impact=600)
