@@ -90,7 +90,7 @@ class CachedArchive(io.RawIOBase):
         return b''.join(parts)
 
 
-def acquire(root, subset, ready_only=False):
+def acquire(root, subset, ready_only=False,workers=8):
     root.mkdir(parents=True, exist_ok=True)
     manifest_path = root / 'full_download_manifest.json'
     manifest = json.loads(manifest_path.read_text()) if manifest_path.exists() else {}
@@ -98,7 +98,8 @@ def acquire(root, subset, ready_only=False):
         # Small ranges avoid the extremely slow full-body transfer of this source.
         span=16*BLOCK
         missing = [start for start in range(0, SIZE, span)
-                   if any(not (root/'ranges'/f'{i:012d}.bin').exists()
+                   if any(not (root/'ranges'/f'{i:012d}.bin').exists() or
+                          (root/'ranges'/f'{i:012d}.bin').stat().st_size!=min(BLOCK,SIZE-i)
                           for i in range(start,min(SIZE,start+span),BLOCK))]
         local = threading.local()
         def fetch(start):
@@ -128,7 +129,7 @@ def acquire(root, subset, ready_only=False):
                     if attempt==4: raise
                     time.sleep(min(30,2**attempt))
             raise RuntimeError('Source remains rate limited after five attempts')
-        with concurrent.futures.ThreadPoolExecutor(max_workers=8) as pool:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool:
             for done, _ in enumerate(pool.map(fetch, missing), 1):
                 print(json.dumps(dict(megabyte_spans_downloaded=done, missing_spans=len(missing))), flush=True)
         digest=hashlib.md5()
@@ -186,5 +187,6 @@ if __name__ == '__main__':
     parser.add_argument('--raw', type=Path, required=True)
     parser.add_argument('--subset', choices=['laboratory', 'all'], default='laboratory')
     parser.add_argument('--ready-only',action='store_true',help='Materialize only complete cached members; no HTTP')
+    parser.add_argument('--workers',type=int,choices=range(1,33),default=8)
     args = parser.parse_args()
-    acquire(args.raw, args.subset,args.ready_only)
+    acquire(args.raw, args.subset,args.ready_only,args.workers)

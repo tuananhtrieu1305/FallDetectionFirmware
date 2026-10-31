@@ -23,11 +23,13 @@ def evaluate_file(path,model,chunksize=100000):
     length=model['length']
     pending=np.empty((0,6),dtype=np.float64)
     pending_time=np.empty(0)
+    pending_rows=np.empty(0,dtype=np.int64)
     previous_time=None
     previous_positive=False
     sensor_rows=segments=windows=alarms=segment_rows=monitored_samples=0
     first_time=last_time=None
     alarm_times=[]
+    alarm_rows=[]
     message_types=Counter()
     max_acc=max_gyro=0.
     with pd.read_csv(path,chunksize=chunksize) as reader:
@@ -44,6 +46,7 @@ def evaluate_file(path,model,chunksize=100000):
             last_time=float(time[-1])
             max_acc=max(max_acc,float(np.abs(values[:,:3]).max()/9.80665))
             max_gyro=max(max_gyro,float(np.rad2deg(np.abs(values[:,3:]).max())))
+            chunk_first_row=sensor_rows
             sensor_rows+=len(time)
             # Split at every anomalous timestamp; never interpolate across a gap/reset.
             boundaries=np.r_[0,np.flatnonzero(np.diff(time)!=10)+1,len(time)]
@@ -51,10 +54,11 @@ def evaluate_file(path,model,chunksize=100000):
                 if previous_time is None or time[start]-previous_time!=10:
                     monitored_samples+=max(0,segment_rows-length+1)
                     segment_rows=0;segments+=1
-                    pending=np.empty((0,6));pending_time=np.empty(0);previous_positive=False
+                    pending=np.empty((0,6));pending_time=np.empty(0);pending_rows=np.empty(0,dtype=np.int64);previous_positive=False
                 segment_rows+=end-start
                 combined=np.concatenate([pending,values[start:end]])
                 combined_time=np.concatenate([pending_time,time[start:end]])
+                combined_rows=np.concatenate([pending_rows,np.arange(chunk_first_row+start,chunk_first_row+end)])
                 offsets=np.arange(0,len(combined)-length+1,50)
                 if len(offsets):
                     # Chunk bounds keep memory finite for multi-hour source files.
@@ -66,12 +70,15 @@ def evaluate_file(path,model,chunksize=100000):
                     starts=positive & ~np.r_[previous_positive,positive[:-1]]
                     times=combined_time[offsets+length-1]
                     alarm_times.extend(times[starts].tolist())
+                    alarm_rows.extend(combined_rows[offsets+length-1][starts].tolist())
                     alarms+=int(starts.sum());windows+=len(offsets)
                     previous_positive=bool(positive[-1])
                     used=int(offsets[-1])+50
                     pending,pending_time=combined[used:],combined_time[used:]
+                    pending_rows=combined_rows[used:]
                 else:
                     pending,pending_time=combined,combined_time
+                    pending_rows=combined_rows
                 previous_time=float(time[end-1])
     monitored_samples+=max(0,segment_rows-length+1)
     hours=monitored_samples/100/3600
@@ -80,7 +87,8 @@ def evaluate_file(path,model,chunksize=100000):
                 monitored_nominal_hours=hours,
                 alarms_per_source_negative_nominal_hour=alarms/hours if hours else None,
                 first_timestamp_ms=first_time,last_timestamp_ms=last_time,
-                alarm_timestamps_ms=alarm_times,accel_max_axis_g=max_acc,gyro_max_axis_dps=max_gyro)
+                alarm_timestamps_ms=alarm_times,alarm_sensor_rows=alarm_rows,
+                accel_max_axis_g=max_acc,gyro_max_axis_dps=max_gyro)
 
 
 def evaluate(raw,root,allow_partial=False):
@@ -109,7 +117,8 @@ def evaluate(raw,root,allow_partial=False):
                 result=evaluate_file(file,model)
                 result.update(status='PASS',source_member=member,source_sha256=p['sha256'],
                               model_sha256=model_hash,evaluator_sha256=evaluator_hash,
-                              worker_id=Path(member).stem.split('_')[-1],
+                              source_id=Path(member).stem.split('_')[-1],
+                              subject_identity_status='unverified filename token; not a validated participant identity',
                               session=Path(member).parent.name)
             except (ValueError,KeyError) as exc:
                 result=dict(status='HOLD',reason=str(exc),source_member=member,
@@ -127,6 +136,8 @@ def evaluate(raw,root,allow_partial=False):
                  nominal_rate_hz=100,segmentation='split when consecutive IMU timestamps differ from 10ms',
                  monitored_nominal_hours=hours,alarms=alarms,
                  alarms_per_source_negative_nominal_hour=alarms/hours if hours else None,
+                 distinct_filename_ids=sorted({r['source_id'] for r in valid}),
+                 identity_note='Source reports 10 field participants; filename IDs are preserved without assuming one ID equals one person.',
                  files=results)
     dump(root/'onfield_evaluation.json',summary)
     return summary

@@ -1,0 +1,255 @@
+{
+  "impact_evaluation_horizon_frames": 100,
+  "policies": {
+    "fall_phase_and_recent_impact": {
+      "event_coverage": 456,
+      "events": 456,
+      "events_without_positive": [],
+      "operating_points": {
+        "0.1": {
+          "adl_monitored_nominal_hours": 1.51871111111111,
+          "detected": 306,
+          "early_fall_trial_alarms": 0,
+          "events": 456,
+          "extra_alarms_in_detection_interval": 1,
+          "false_alarms": 0,
+          "false_alarms_per_nominal_hour": 0.0,
+          "late_fall_trial_alarms": 0,
+          "median_delay_nominal_s": 0.22,
+          "p95_delay_nominal_s": 0.4775,
+          "recall": 0.6710526315789473,
+          "threshold": 0.9999997018614842
+        },
+        "0.25": {
+          "adl_monitored_nominal_hours": 1.51871111111111,
+          "detected": 306,
+          "early_fall_trial_alarms": 0,
+          "events": 456,
+          "extra_alarms_in_detection_interval": 1,
+          "false_alarms": 0,
+          "false_alarms_per_nominal_hour": 0.0,
+          "late_fall_trial_alarms": 0,
+          "median_delay_nominal_s": 0.22,
+          "p95_delay_nominal_s": 0.4775,
+          "recall": 0.6710526315789473,
+          "threshold": 0.9999997018614842
+        },
+        "0.5": {
+          "adl_monitored_nominal_hours": 1.51871111111111,
+          "detected": 306,
+          "early_fall_trial_alarms": 0,
+          "events": 456,
+          "extra_alarms_in_detection_interval": 1,
+          "false_alarms": 0,
+          "false_alarms_per_nominal_hour": 0.0,
+          "late_fall_trial_alarms": 0,
+          "median_delay_nominal_s": 0.22,
+          "p95_delay_nominal_s": 0.4775,
+          "recall": 0.6710526315789473,
+          "threshold": 0.9999997018614842
+        },
+        "1.0": {
+          "adl_monitored_nominal_hours": 1.51871111111111,
+          "detected": 352,
+          "early_fall_trial_alarms": 0,
+          "events": 456,
+          "extra_alarms_in_detection_interval": 0,
+          "false_alarms": 1,
+          "false_alarms_per_nominal_hour": 0.6584530742442427,
+          "late_fall_trial_alarms": 0,
+          "median_delay_nominal_s": 0.21,
+          "p95_delay_nominal_s": 0.48,
+          "recall": 0.7719298245614035,
+          "threshold": 0.9999862234180473
+        },
+        "2.0": {
+          "adl_monitored_nominal_hours": 1.51871111111111,
+          "detected": 411,
+          "early_fall_trial_alarms": 0,
+          "events": 456,
+          "extra_alarms_in_detection_interval": 1,
+          "false_alarms": 2,
+          "false_alarms_per_nominal_hour": 1.3169061484884854,
+          "late_fall_trial_alarms": 2,
+          "median_delay_nominal_s": 0.16,
+          "p95_delay_nominal_s": 0.61,
+          "recall": 0.9013157894736842,
+          "threshold": 0.9996483437287056
+        }
+      },
+      "window_counts": {
+        "-1": 1621,
+        "0": 13274,
+        "1": 1529
+      }
+    },
+    "recent_impact_100": {
+      "event_coverage": 456,
+      "events": 456,
+      "events_without_positive": [],
+      "operating_points": {
+        "0.1": {
+          "adl_monitored_nominal_hours": 1.51871111111111,
+          "detected": 443,
+          "early_fall_trial_alarms": 0,
+          "events": 456,
+          "extra_alarms_in_detection_interval": 0,
+          "false_alarms": 0,
+          "false_alarms_per_nominal_hour": 0.0,
+          "late_fall_trial_alarms": 2,
+          "median_delay_nominal_s": 0.25,
+          "p95_delay_nominal_s": 0.48,
+          "recall": 0.9714912280701754,
+          "threshold": 0.9973402932729418
+        },
+        "0.25": {
+          "adl_monitored_nominal_hours": 1.51871111111111,
+          "detected": 443,
+          "early_fall_trial_alarms": 0,
+          "events": 456,
+          "extra_alarms_in_detection_interval": 0,
+          "false_alarms": 0,
+          "false_alarms_per_nominal_hour": 0.0,
+          "late_fall_trial_alarms": 2,
+          "median_delay_nominal_s": 0.25,
+          "p95_delay_nominal_s": 0.48,
+          "recall": 0.9714912280701754,
+          "threshold": 0.9973402932729418
+        },
+        "0.5": {
+          "adl_monitored_nominal_hours": 1.51871111111111,
+          "detected": 443,
+          "early_fall_trial_alarms": 0,
+          "events": 456,
+          "extra_alarms_in_detection_interval": 0,
+          "false_alarms": 0,
+          "false_alarms_per_nominal_hour": 0.0,
+          "late_fall_trial_alarms": 2,
+          "median_delay_nominal_s": 0.25,
+          "p95_delay_nominal_s": 0.48,
+          "recall": 0.9714912280701754,
+          "threshold": 0.9973402932729418
+        },
+        "1.0": {
+          "adl_monitored_nominal_hours": 1.51871111111111,
+          "detected": 443,
+          "early_fall_trial_alarms": 0,
+          "events": 456,
+          "extra_alarms_in_detection_interval": 0,
+          "false_alarms": 0,
+          "false_alarms_per_nominal_hour": 0.0,
+          "late_fall_trial_alarms": 2,
+          "median_delay_nominal_s": 0.25,
+          "p95_delay_nominal_s": 0.48,
+          "recall": 0.9714912280701754,
+          "threshold": 0.9973402932729418
+        },
+        "2.0": {
+          "adl_monitored_nominal_hours": 1.51871111111111,
+          "detected": 454,
+          "early_fall_trial_alarms": 0,
+          "events": 456,
+          "extra_alarms_in_detection_interval": 0,
+          "false_alarms": 2,
+          "false_alarms_per_nominal_hour": 1.3169061484884854,
+          "late_fall_trial_alarms": 3,
+          "median_delay_nominal_s": 0.22,
+          "p95_delay_nominal_s": 0.4634999999999997,
+          "recall": 0.9956140350877193,
+          "threshold": 0.9174386457067443
+        }
+      },
+      "window_counts": {
+        "-1": 2238,
+        "0": 13274,
+        "1": 912
+      }
+    },
+    "recent_impact_50": {
+      "event_coverage": 456,
+      "events": 456,
+      "events_without_positive": [],
+      "operating_points": {
+        "0.1": {
+          "adl_monitored_nominal_hours": 1.51871111111111,
+          "detected": 436,
+          "early_fall_trial_alarms": 0,
+          "events": 456,
+          "extra_alarms_in_detection_interval": 0,
+          "false_alarms": 0,
+          "false_alarms_per_nominal_hour": 0.0,
+          "late_fall_trial_alarms": 0,
+          "median_delay_nominal_s": 0.25,
+          "p95_delay_nominal_s": 0.49,
+          "recall": 0.956140350877193,
+          "threshold": 0.9985457082288534
+        },
+        "0.25": {
+          "adl_monitored_nominal_hours": 1.51871111111111,
+          "detected": 436,
+          "early_fall_trial_alarms": 0,
+          "events": 456,
+          "extra_alarms_in_detection_interval": 0,
+          "false_alarms": 0,
+          "false_alarms_per_nominal_hour": 0.0,
+          "late_fall_trial_alarms": 0,
+          "median_delay_nominal_s": 0.25,
+          "p95_delay_nominal_s": 0.49,
+          "recall": 0.956140350877193,
+          "threshold": 0.9985457082288534
+        },
+        "0.5": {
+          "adl_monitored_nominal_hours": 1.51871111111111,
+          "detected": 436,
+          "early_fall_trial_alarms": 0,
+          "events": 456,
+          "extra_alarms_in_detection_interval": 0,
+          "false_alarms": 0,
+          "false_alarms_per_nominal_hour": 0.0,
+          "late_fall_trial_alarms": 0,
+          "median_delay_nominal_s": 0.25,
+          "p95_delay_nominal_s": 0.49,
+          "recall": 0.956140350877193,
+          "threshold": 0.9985457082288534
+        },
+        "1.0": {
+          "adl_monitored_nominal_hours": 1.51871111111111,
+          "detected": 436,
+          "early_fall_trial_alarms": 0,
+          "events": 456,
+          "extra_alarms_in_detection_interval": 0,
+          "false_alarms": 0,
+          "false_alarms_per_nominal_hour": 0.0,
+          "late_fall_trial_alarms": 0,
+          "median_delay_nominal_s": 0.25,
+          "p95_delay_nominal_s": 0.49,
+          "recall": 0.956140350877193,
+          "threshold": 0.9985457082288534
+        },
+        "2.0": {
+          "adl_monitored_nominal_hours": 1.51871111111111,
+          "detected": 454,
+          "early_fall_trial_alarms": 0,
+          "events": 456,
+          "extra_alarms_in_detection_interval": 0,
+          "false_alarms": 3,
+          "false_alarms_per_nominal_hour": 1.975359222732728,
+          "late_fall_trial_alarms": 0,
+          "median_delay_nominal_s": 0.22,
+          "p95_delay_nominal_s": 0.46,
+          "recall": 0.9956140350877193,
+          "threshold": 0.8989123946926417
+        }
+      },
+      "window_counts": {
+        "-1": 2685,
+        "0": 13274,
+        "1": 465
+      }
+    }
+  },
+  "reason": "Sensitivity audit only; original v1 test already opened, so alternatives cannot replace its locked configuration.",
+  "release_changed": false,
+  "release_policy": "recent_impact_100",
+  "scope": "development only; 23 subjects, five-fold OOF, 100 samples/stride50; no test/OnField used"
+}

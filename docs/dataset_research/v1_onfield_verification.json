@@ -1,0 +1,25 @@
+{
+  "status": "PASS",
+  "scope": "All 18 OnField raw SHA-256 and exact alarm/row/time/count parity using 37123-row chunks versus original 100000-row chunks",
+  "files": [
+    "UniVrFall_Dataset/OnField/20241106/20241106_1000.csv",
+    "UniVrFall_Dataset/OnField/20241106/20241106_999.csv",
+    "UniVrFall_Dataset/OnField/20241223/20241223_1001.csv",
+    "UniVrFall_Dataset/OnField/20241223/20241223_1002.csv",
+    "UniVrFall_Dataset/OnField/20250108/20250108_1001.csv",
+    "UniVrFall_Dataset/OnField/20250108/20250108_1002.csv",
+    "UniVrFall_Dataset/OnField/20250109/20250109_1003.csv",
+    "UniVrFall_Dataset/OnField/20250109/20250109_1004.csv",
+    "UniVrFall_Dataset/OnField/20250110/20250110_1005.csv",
+    "UniVrFall_Dataset/OnField/20250110/20250110_1006.csv",
+    "UniVrFall_Dataset/OnField/20250115/20250115_1007.csv",
+    "UniVrFall_Dataset/OnField/20250115/20250115_1008.csv",
+    "UniVrFall_Dataset/OnField/20250117/20250117_1009.csv",
+    "UniVrFall_Dataset/OnField/20250124/20250124_1005.csv",
+    "UniVrFall_Dataset/OnField/20250124/20250124_1006.csv",
+    "UniVrFall_Dataset/OnField/20250129/20250129_1003.csv",
+    "UniVrFall_Dataset/OnField/20250129/20250129_1005.csv",
+    "UniVrFall_Dataset/OnField/20250218/20250218_1010.csv"
+  ],
+  "model_sha256": "8eb82f6c4c5dab916f232cc47a57139efcfb234856601767acb6995a059129ba"
+}

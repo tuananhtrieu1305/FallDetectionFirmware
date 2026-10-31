@@ -1,0 +1,42 @@
+{
+  "raw_zip_md5": "PASS",
+  "all_members_crc": 1281,
+  "laboratory_csv": 1234,
+  "accepted_laboratory_trials": 1148,
+  "valid_falls": 573,
+  "quarantined_trials": 86,
+  "window_tensors": [
+    100,
+    200,
+    300
+  ],
+  "full_rebuild_and_window_indices": "PASS",
+  "independent_laboratory_verifier": "PASS",
+  "onfield_files_evaluated": 18,
+  "onfield_chunk_parity_all_files": "PASS",
+  "consumer_load": {
+    "train_shape": [
+      11243,
+      100,
+      6
+    ],
+    "validation_shape": [
+      2943,
+      100,
+      6
+    ],
+    "dtype": "float32"
+  },
+  "source_clock": "nominal_unverified_explicitly_documented",
+  "hardware_alignment": "pending_future_hardware_phase",
+  "raw_data_outside_git": true,
+  "scope": "source dataset research release; no prototype deployment or new hardware recordings",
+  "status": "PASS",
+  "development_label_policy_study": "PASS; three rules, test excluded; release unchanged",
+  "full_zip_file": "UniVrFall_Dataset.zip; MD5 and SHA-256 recorded",
+  "onfield_sensor_rows": 19759785,
+  "onfield_monitored_nominal_hours": 54.88224166666666,
+  "onfield_alarms": 37,
+  "traceable_onfield_alarm_contexts": 37,
+  "release_artifacts_hashed": 1250
+}

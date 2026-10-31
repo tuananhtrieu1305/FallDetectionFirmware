@@ -4,6 +4,9 @@
     "splits.json": "388ecfaad1805a40eeab4ab10c010804d5cd8a1c30899262ba9369d827e143f8",
     "tensor_hashes.json": "5d49f3d3ab6a7c36cad987a135169081c35a086c11a8a9b0c34ff8a975d8e5cb",
     "normalizers.json": "27051f719698e2e48a44631785121bf490e843825babbafb9b7de287f298a541",
-    "recording_manifest.json": "9a4bcefb65eed266298b335d3feeae0b0f97fd3357414d51ef061ad8d8e837c5"
+    "recording_manifest.json": "9a4bcefb65eed266298b335d3feeae0b0f97fd3357414d51ef061ad8d8e837c5",
+    "window_index_100.csv": "c61962a888dc651f0e87cf704ef0da0d1b066ee3591b8566691721accbd25653",
+    "window_index_200.csv": "480039d8cf4cbb9825f27b6bc8e716a2fd5c4931e9be94f2334a92e3912690d7",
+    "window_index_300.csv": "c9c28fa17443aa9614b7f2886d3ff41135be26715eb51bc19f4c28a0dafdeb2f"
   }
 }
