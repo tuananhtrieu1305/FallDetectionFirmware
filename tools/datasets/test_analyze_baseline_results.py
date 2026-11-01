@@ -59,5 +59,48 @@ class ResultAnalysisContracts(unittest.TestCase):
         self.assertEqual(choose_comparator(r, candidates[::-1], outcomes)['trial_id'], 'a')
         self.assertIsNone(choose_comparator(r, [], outcomes))
 
+    def test_invalid_window_input_rejected(self):
+        from analyze_baseline_results import diagnose_trial
+        for ends, scores in [([99], []), ([99], [float('nan')]), ([149, 99], [.1, .2])]:
+            with self.assertRaises(ValueError): diagnose_trial(ends, scores, .5, None)
+
+    def test_no_events_is_not_perfect_recall(self):
+        from analyze_baseline_results import paired_events
+        a = paired_events([], [])
+        self.assertIsNone(a['delta_recall'])
+        self.assertIsNone(a['paired_subject_bootstrap_95'])
+
+
+class FrozenResultsIntegration(unittest.TestCase):
+    def test_real_results_without_fitting_or_modifying_inputs(self):
+        import json
+        import tempfile
+        from pathlib import Path
+        from unittest.mock import patch
+        from analyze_baseline_results import analyze
+        from run_metrics_v11 import sha
+        manifest = Path('data/processed/univrfall_v1/manifest.json')
+        if not manifest.exists(): self.skipTest('Local dataset not installed')
+        source = Path(json.loads(manifest.read_text())['source'])
+        if not source.exists(): self.skipTest('Canonical source data not installed')
+        baseline = Path('reports/baseline_selection')
+        before = sha(baseline/'selected_model.json'), sha(baseline/'selection_lock.json')
+        with tempfile.TemporaryDirectory(dir=Path(__file__).parent) as tmp:
+            with patch('sklearn.linear_model.LogisticRegression.fit', side_effect=AssertionError('Training forbidden')), \
+                 patch('sklearn.tree.DecisionTreeClassifier.fit', side_effect=AssertionError('Training forbidden')), \
+                 patch('sklearn.ensemble.RandomForestClassifier.fit', side_effect=AssertionError('Training forbidden')), \
+                 patch('metrics_v11.select_threshold', side_effect=AssertionError('Reselection forbidden')):
+                result = analyze(source, baseline, Path(tmp))
+            self.assertEqual(result['status'], 'PASS')
+            self.assertEqual(len(result['errors']), 8)
+            self.assertEqual(sum(e['diagnosis']=='no_crossing_in_detection_interval' for e in result['errors']), 7)
+            pair = result['ablation']['acc_only']['vs_selected_C01']
+            self.assertEqual((len(pair['rescued_trials']), len(pair['lost_trials'])), (3, 1))
+            self.assertEqual(before, (sha(baseline/'selected_model.json'), sha(baseline/'selection_lock.json')))
+            report = (Path(tmp)/'REPORT.md').read_text(encoding='utf-8')
+            self.assertIn('Ưu tiên1', report)
+            self.assertEqual(len({e['figure'] for e in result['errors']}), 8)
+            self.assertTrue(all((Path(tmp)/e['figure']).is_file() for e in result['errors']))
+
 
 if __name__ == '__main__': unittest.main()

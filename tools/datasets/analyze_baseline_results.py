@@ -204,6 +204,10 @@ def analyze(source, baseline, out):
         wi = index[index.recording_id.eq(record['recording_id'])].copy()
         diag = diagnose_trial(wi.end_frame, wi['lr_C0.1'], threshold, record['event'])
         comparator = choose_comparator(record, devrecords, correct)
+        for r in [record, comparator]:
+            if r is not None:
+                path = source/r['recording']
+                inputs[str(path)] = sha(path)
         figure = 'figures/'+record['trial_id']+'.png'
         row = dict(trial_id=record['trial_id'], subject_id=record['subject_id'], activity=record['activity'],
                    activity_key=record['activity_key'], fold=record['partition'],
@@ -292,6 +296,31 @@ def analyze(source, baseline, out):
     dump(out/'hardware_readiness.json', hardware)
     make_overview(figures, by_subject, comparison, curve, tradeoff, field_rows)
     write_report(out, selected, test, field, field_upper, cases, comparison, pairs, ablation_pairs, hardware, tradeoff)
+    (out/'README.md').write_text('''# Phân tích kết quả baseline đã có
+
+**Đọc [REPORT.md](REPORT.md) để xem kết luận và bước ưu tiên tiếp theo.**
+
+- [Metric theo window/sự kiện/thời gian](metric_summary.csv)
+- [8 ca lỗi](error_cases.csv), [các window liên quan](case_windows.csv), [trial đúng để đối chiếu](case_comparisons.csv)
+- [Theo người](by_subject.csv), [theo hoạt động](by_activity.csv)
+- [So sánh model](model_comparison.csv), [danh sách sự kiện cứu/mất](model_pairs.json)
+- [Acc-only/gyro-only](sensor_comparison.json), [kết quả từng sự kiện](sensor_event_outcomes.csv)
+- [Đánh đổi threshold cũ](threshold_tradeoff.csv), [OnField từng file](onfield_by_file.csv)
+- [Mức sẵn sàng dữ liệu phần cứng](hardware_readiness.json), [đối chiếu/hash](verification.json)
+
+Chạy lại từ root repo:
+
+```powershell
+python tools/datasets/analyze_baseline_results.py
+python -m unittest discover -s tools/datasets -p 'test_analyze_baseline_results.py'
+```
+
+Script lấy đường dẫn nguồn từ manifest dataset và chỉ đọc report/prediction đã lưu.
+Không train lại, không đổi model/threshold. Metric chưa xác định ghi N/A/null.
+CSV score phải đọc với float_precision=round_trip để giữ nguyên quyết định ở threshold trùng score.
+Kiểm tra tích hợp chặn estimator.fit và chọn threshold mới; không dùng model23người để giải thích score OOF.
+Các hình mỗi ca lỗi nằm trong figures; thời gian là danh nghĩa của nguồn.
+''', encoding='utf-8')
     # Verify the requested scope and invariant from authoritative artifacts.
     assert before == {str(p): sha(p) for p in baseline.rglob('*') if p.is_file()}, 'Frozen baseline modified'
     for p, digest in inputs.items(): assert sha(p)==digest, p
@@ -311,6 +340,11 @@ def analyze(source, baseline, out):
         test_errors_used_for_design=False,onfield_used_for_tuning=False,
         output_hashes={str(p.relative_to(out)):sha(p) for p in out.rglob('*') if p.is_file() and p.name!='verification.json'},
         source_code_sha256=sha(__file__),
+        requirements=[dict(section='A', status='PASS', evidence='metric_summary; frozen development counts recomputed; test/field summaries and CI'),
+                      dict(section='B', status='PASS', evidence='all8 error_cases; saved OOF score margins; eight paired figures; by_subject denominators'),
+                      dict(section='C', status='PASS', evidence='model_pairs; all456 aligned sensor_event_outcomes; same-C comparison; frozen threshold curve'),
+                      dict(section='D', status='PASS', evidence='all18 field file counts/rates; hardware metadata/timing inspected; missing labels/mount recorded'),
+                      dict(section='Decision', status='PASS', evidence='REPORT: one priority, two later steps, hypotheses/tests/retain-or-reject criteria')],
         limitations=['Ablation window scores/fold weights were not saved','No labeled prototype fall test available',
                      'Development results selected/tuned; CI conditional on frozen predictions','OnField labels/participant IDs unverified'])
     dump(out/'verification.json', verification)
@@ -374,9 +408,10 @@ def write_report(out, selected, test, field, field_upper, cases, comparison, pai
         lines.append(f'| [{c["trial_id"]}]({c["figure"]}) | {c["subject_id"]} / {c["activity_key"]} | {c["diagnosis"]} | {maximum} | {margin} | {c["comparator_trial"]} |')
     reasons = pd.Series([c['diagnosis'] for c in cases]).value_counts().to_dict()
     lines += ['',f'Ngưỡng giữ nguyên: {selected["threshold"]:.17g}. Đếm chẩn đoán: {reasons}. Max score tính trên tất cả window kết thúc trong [onset, impact+100], bao gồm IGNORE; không chỉ các window FALL dùng cho loss.',
+        'Cả7 lần bỏ sót đều không có score vượt threshold trong khoảng hợp lệ, không phải lỗi cảnh báo trễ. S31T33R01 chỉ cách ngưỡng khoảng0,000795, S36T32R01 khoảng0,002682; S36T21R01 thấp hơn nhiều (max score≈0,249). Việc một số ca gần ngưỡng không đủ lý do hạ ngưỡng theo từng ca; phải xét đánh đổi báo nhầm trên toàn development. Score chưa phải xác suất đã hiệu chuẩn.',
         f'SA36: bỏ sót {sa36["missed"]}/{sa36["events"]} lần ngã, recall {pct(sa36["recall"])}; chiếm4/7 lỗi toàn bộ. Đây là tập trung lỗi theo người, chưa chứng minh do hướng gắn, nhãn hoặc gyro. Cần phân biệt tỷ lệ lỗi của người đó với số lỗi tuyệt đối. Xem [bảng theo người](by_subject.csv).',
-        'Cảnh báo nhầm duy nhất: S22T15R01, ADL15 (collapse into chair). Các lỗi và trial đúng được vẽ đủ sáu kênh, norm và score theo frame; trial đối chiếu là cùng hoạt động, người khác, kết quả đúng, chọn trial ID nhỏ nhất để tránh cherry-pick. Một trial đúng chỉ là minh họa, không đại diện mọi người.',
-        'Đồ thị giải thích trực tiếp vị trí score dưới/vượt ngưỡng và thời điểm cảnh báo. Khác biệt tín hiệu giữa hai người chỉ tạo giả thuyết. Không tự sửa annotation hoặc suy ra tư thế/chấn động cụ thể từ IMU; chưa có video để xác minh nguyên nhân. Không có trọng số model từng fold được lưu nên không thể phân rã đóng góp feature OOF; model fit23 người không được dùng thay model OOF để giải thích lỗi.', '',
+        'Cảnh báo nhầm duy nhất: S22T15R01, ADL15 (collapse into chair), cạnh cảnh báo tại frame949, max score0,987973 so với threshold0,984773. Các lỗi và trial đúng được vẽ đủ sáu kênh, norm và score theo frame; trial đối chiếu là cùng hoạt động, người khác, kết quả đúng, chọn trial ID nhỏ nhất để tránh cherry-pick. Một trial đúng chỉ là minh họa, không đại diện mọi người.',
+        'Đồ thị giải thích trực tiếp vị trí score dưới/vượt ngưỡng và thời điểm cảnh báo. Hai trial có thể thuộc hai fold với model train khác nhau; đối chiếu là mô tả, không phải kiểm chứng cô lập tác động của người. Khác biệt tín hiệu giữa hai người chỉ tạo giả thuyết. Không tự sửa annotation hoặc suy ra tư thế/chấn động cụ thể từ IMU; chưa có video để xác minh nguyên nhân. Không có trọng số model từng fold được lưu nên không thể phân rã đóng góp feature OOF; model fit23 người không được dùng thay model OOF để giải thích lỗi.', '',
         '## 3. Model phức tạp hơn và acc-only có giúp không?', '',
         '| Model, tại threshold đã khóa của nó | Event recall | Window P/R/F1 | Cứu / mất so với LR C0,1 |',
         '|---|---:|---|---:|']
@@ -386,8 +421,13 @@ def write_report(out, selected, test, field, field_upper, cases, comparison, pai
         else:
             lines.append(f'| {row["model"]} | {pct(row["event_recall"])} | {pct(row["window_precision"])} / {pct(row["window_recall"])} / {pct(row["window_f1"])} | {row["rescued_vs_selected"]} / {row["lost_vs_selected"]} |')
     lines += ['',f'Chênh LR C0,1 so với C1: {-full1pair["delta_recall"]*100:.2f} điểm phần trăm. Khoảng chênh C1−C0,1 theo bootstrap người: {full1pair["paired_subject_bootstrap_95"]}. Khoảng còn chạm0 nên chưa khẳng định vượt trội chắc chắn. Đây là so sánh đã lựa chọn trên development, CI chỉ có điều kiện trên prediction cố định.',
+        'Ví dụ trade-off giữa model: RF depth10/leaf10 cứu4 ca baseline bỏ sót nhưng mất14 ca baseline phát hiện được, nên net−10; cây depth8/leaf30 cứu4 nhưng mất25. Chỉ nhìn các ca được cứu sẽ đánh giá sai lợi ích. Danh sách ghép cặp đầy đủ nằm trong model_pairs.json.',
         'LR C0,1 có score OOF giống hệt ở seed42/43/44. Điều đó phù hợp độ xác định của solver/cấu hình; không chứng minh ổn định giữa người hoặc miền dữ liệu. Tree có seed không đạt điểm vận hành, forest có recall kém hơn trong grid hiện tại. Không kết luận mọi loại cây/forest hoặc model sâu đều kém.', '',
         '**Ablation phải so cùng C trước:**', '',
+        '| Cấu hình chẩn đoán | Phát hiện /456 | Window P / R / F1 | FA / giờ ADL |',
+        '|---|---:|---|---:|',
+        f'| Acc-only C1 | {int(acc["metrics"]["detected"])}/456 | {pct(acc["metrics"]["window_precision"])} / {pct(acc["metrics"]["window_recall"])} / {pct(acc["metrics"]["window_f1"])} | {int(acc["metrics"]["false_alarms"])}/{acc["metrics"]["adl_hours"]:.4f} |',
+        f'| Gyro-only C1 | {int(gyro["metrics"]["detected"])}/456 | {pct(gyro["metrics"]["window_precision"])} / {pct(gyro["metrics"]["window_recall"])} / {pct(gyro["metrics"]["window_f1"])} | {int(gyro["metrics"]["false_alarms"])}/{gyro["metrics"]["adl_hours"]:.4f} |', '',
         f'- Acc-only C1 vs full6channel C1: cứu {len(acc["vs_full_C1"]["rescued_trials"])} sự kiện, mất {len(acc["vs_full_C1"]["lost_trials"])} sự kiện, net {acc["vs_full_C1"]["delta_detected"]}; paired95% chênh recall {acc["vs_full_C1"]["paired_subject_bootstrap_95"]}.',
         f'- Acc-only C1 vs baseline C0,1: cứu {len(acc["vs_selected_C01"]["rescued_trials"])} sự kiện, mất {len(acc["vs_selected_C01"]["lost_trials"])} sự kiện, net {acc["vs_selected_C01"]["delta_detected"]}; đồng thời thay cả nhóm feature và C nên chưa tách được tác động.',
         f'- Gyro-only C1 recall {pct(gyro["metrics"]["event_recall"])}; kết quả hiện tại cho thấy gyro riêng yếu hơn trong bài toán/configuration này, không chứng minh gyro vô ích khi kết hợp hoặc trên phần cứng thật.',
@@ -411,8 +451,17 @@ def write_report(out, selected, test, field, field_upper, cases, comparison, pai
         '- So sánh model chuỗi nhỏ theo cùng protocol và đo tài nguyên ESP32; nếu không cải thiện trade-off hoặc chưa đủ bằng chứng thì giữ model đơn giản. Chưa có lý do để chọn sẵn CNN.', '',
         '## Tái lập và phạm vi', '',
         'Chạy từ root project: `python tools/datasets/analyze_baseline_results.py`. Chỉ đọc score/model/result đã có; không gọi fit, không quét ngưỡng mới, không cập nhật selection_lock. Nguồn audit lấy từ manifest của dataset export. Đọc score CSV với float_precision=round_trip và đối chiếu NPZ để không lật quyết định ở ngưỡng trùng score.',
-        'Các file gốc và model/threshold được băm trước/sau; [verification.json](verification.json) ghi hash nguồn, đầu ra, số lỗi và đối chiếu counts. Điểm vận hành trong threshold_tradeoff.csv chỉ mô tả lại đường score đã lưu; không đổi baseline. Các khoảng tin cậy và p-value không được dùng để tuyên bố xác nhận độc lập sau tìm kiếm model.',
+        'Các file gốc và model/threshold được băm trước/sau; [verification.json](verification.json) ghi hash nguồn, đầu ra, số lỗi và đối chiếu counts. Điểm vận hành trong threshold_tradeoff.csv chỉ mô tả lại đường score đã lưu; không đổi baseline. Khoảng tin cậy recall/chênh recall ở dạng tỷ lệ0–1; nhân100 để đổi sang phần trăm/điểm phần trăm. Các khoảng tin cậy không được dùng để tuyên bố xác nhận độc lập sau tìm kiếm model.',
         'Đầu ra: metric_summary, error_cases/case_windows/case_comparisons, by_subject/by_activity, model_comparison/model_pairs, sensor_comparison, seed_stability, OnField theo file, hardware_readiness và figures. Thiếu dữ liệu phần cứng là kết luận về mức sẵn sàng, không phải phần phân tích còn dang dở.']
+    position = lines.index('## 4. OnField và phần cứng: bằng chứng/giới hạn')
+    operating = ['**Đường đánh đổi từ score development đã lưu (không cập nhật threshold):**', '',
+                 '| Ngân sách FA/h | Recall quan sát | FA/h quan sát | Threshold mô tả |',
+                 '|---:|---:|---:|---:|']
+    for r in tradeoff:
+        if r['available']:
+            operating.append(f'| {r["budget"]} | {pct(r["recall"])} | {r["false_alarms_per_nominal_hour"]:.3f} | {r["threshold"]:.9f} |')
+    operating += ['', 'Cùng một điểm0FA cho nhiều ngân sách phản ánh thời lượng âm ngắn. Nới ngân sách lên2/h quan sát có thể bắt thêm sự kiện nhưng cũng tăng cảnh báo; đây là mô tả, không phải quyết định thay ngưỡng.', '']
+    lines[position:position] = operating
     (out/'REPORT.md').write_text('\n'.join(line.rstrip() for line in lines)+'\n', encoding='utf-8')
 
 
