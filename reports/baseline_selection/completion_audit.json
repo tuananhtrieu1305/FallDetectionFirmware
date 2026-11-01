@@ -1,0 +1,77 @@
+{
+  "status": "PASS",
+  "requirements": [
+    {
+      "step": 1,
+      "status": "PASS",
+      "evidence": "experiment_lock.json; development only, fixed protocol/splits"
+    },
+    {
+      "step": 2,
+      "status": "PASS",
+      "evidence": "eda_summary.json; quality/count tables by trial/subject/fold/activity"
+    },
+    {
+      "step": 3,
+      "status": "PASS",
+      "evidence": "6-channel traces, norm traces, trial distributions, subject feature shifts, correlations, pre/post impact and OOF error plots"
+    },
+    {
+      "step": 4,
+      "status": "PASS",
+      "evidence": "EDA.md created before experiment; 13 fixed model configs + max acceleration reference"
+    },
+    {
+      "step": 5,
+      "status": "PASS",
+      "evidence": "all OOF scores independently re-counted; fold subjects and train masks verified; three-seed report; 36 tests"
+    },
+    {
+      "step": 6,
+      "status": "PASS",
+      "evidence": "winner recomputed from all14; portable test scores match; all18 OnField model hashes/chunks match; REPORT.md"
+    }
+  ],
+  "selected": {
+    "id": "lr_C0.1",
+    "family": "lr",
+    "C": 0.1
+  },
+  "coverage_percent": 95.39170506912443,
+  "artifact_sha256": {
+    "README.md": "aa68baa6727497df0833cc89eb54b97116547fbe1a7433326650c0036e20f9c0",
+    "EDA.md": "78559faf4aba5d8d555b14e8c3b106796ff86420b9c6a442b842db8426552371",
+    "REPORT.md": "81f89aef13c386818145113eafca311cf994c99d53539618922ad48287bc4eb4",
+    "comparison.csv": "3faacfb9de2950a10fd0ea1bbcf0ee75ddea47c5b129f85a890221224a7346bf",
+    "oof_predictions.csv": "6bf7c825057abf9d4948e448ec7749410419fbe14d376d0289efcaefb863da91",
+    "selected_model.json": "bd42fd252ad4d6812c2c3bce703927607f367389ef476f3efa0e9645f38e96a7",
+    "selection_lock.json": "918cafaec3c5102eabefdc5428c0a9725ef460c111a2e7cdf8613215348b2b59",
+    "experiment_lock.json": "125d331c282b341513103cd046d0ff08c14e2d0fea45d9d03b831f503f8fe294",
+    "seed_stability.csv": "2dcedb27be692490b8c56b655faa6f05442b4147a8f6a32e27bc167d198c551e",
+    "sensor_ablation.json": "7d50c0cccae7c2943dcede5e37f84aa0011f051baa15936c6af39e6cc3077349",
+    "test_metrics.json": "bbc203bf5f7fa9f8fc8995c0a139477560c07452921d7110d08b86b01e97dd50",
+    "host_cost.json": "27c788f85a687ca98e71b5fefafbf478a5cda7b33fce296e2552b8f436ef059d",
+    "paired_comparison.json": "93ab20c04819b8f49b5aee2e43a26917335ab78b7828ec8b442554084437d007",
+    "selected_oof_errors.csv": "6dfc4d93ea02599616cfb9ad3079232413a9c76d77877367d6fb94c9da12c34c"
+  },
+  "source_hashes": {
+    "splits.json": "388ecfaad1805a40eeab4ab10c010804d5cd8a1c30899262ba9369d827e143f8",
+    "recording_manifest.json": "9a4bcefb65eed266298b335d3feeae0b0f97fd3357414d51ef061ad8d8e837c5",
+    "window_index_100.csv": "c61962a888dc651f0e87cf704ef0da0d1b066ee3591b8566691721accbd25653"
+  },
+  "code_hashes": {
+    "tools\\datasets\\analyze_baseline_data.py": "65d6a0fd35a63353e16151355339a3877146c645a851f7e316dbb058195c2867",
+    "tools\\datasets\\diagnose_baseline_data.py": "96a248b93708cb377f6660197903cbb3b167bc2b1d4138d4d2abc59f2c5410c8",
+    "tools\\datasets\\report_baseline_selection.py": "4e39c9b25bb591e0f6f261fa60a50d2914244265286c38c836a1312e6eeb2850",
+    "tools\\datasets\\select_baseline.py": "291bdce43005626b4a0c9af81f6b11e50c18825d5beb639bbbbb437336519b75",
+    "tools\\datasets\\test_baseline_selection.py": "e89a31dad29a2e09557a7680646f2f262d3d29b536b10f27ea70f94e609be4ce",
+    "tools\\datasets\\verify_baseline_selection.py": "42e7d05134001d8dfd82e0086fcb131e460ccb6e42ba918f3ac0b8bbf3063e9e"
+  },
+  "caveats": [
+    "Best within predefined comparison, not universally optimal",
+    "Selected development results optimistic; conditional CIs",
+    "Test/OnField previously observed; nominal clock",
+    "ESP32 RAM and latency NOT MEASURED",
+    "Acc-only diagnostic requires separate confirmation"
+  ]
+}

@@ -1,0 +1,60 @@
+{"id": "lr_C0.1", "recall": 1.0, "fa_h": 0.0}
+{"id": "lr_C1.0", "recall": 1.0, "fa_h": 0.0}
+{"id": "lr_C10.0", "recall": 1.0, "fa_h": 0.0}
+{"id": "acc_threshold", "recall": 1.0, "fa_h": 0.0}
+STABILITY lr_C10.0 seed43
+STABILITY lr_C10.0 seed44
+{"rows": 3, "split_counts": {"test": 1, "train": 1, "validation": 1}, "excluded_ignore_windows": 1, "verification": "PASS: every CSV signal value and label equals the exported NPZ/source window"}
+{"sensor_rows": 200, "message_types": {"1": 200}, "segments": 1, "windows": 3, "alarms": 1, "monitored_nominal_hours": 0.00028055555555555554, "alarms_per_source_negative_nominal_hour": 3564.3564356435645, "first_timestamp_ms": 0.0, "last_timestamp_ms": 1990.0, "alarm_sensor_rows": [99], "accel_max_axis_g": 1.0, "gyro_max_axis_dps": 0.0, "status": "PASS", "source_member": "UniVrFall_Dataset/OnField/20241106/20241106_1000.csv", "source_sha256": "77fcc71192037579b46b626f661ae311fae24077c9bbca4ce92afdea2680a40e", "model_sha256": "0dfa37d43f8eeb55c1d51cd9f802086c7f6741b5f977336083e240d7867c9e4a", "evaluator_sha256": "4378d3279932ef5863e914523133ef9d0d7ace1e44898e47e4900eb3ff0a8877", "source_id": "1000", "subject_identity_status": "unverified filename token; not a validated participant identity", "session": "20241106"}
+{"accel_max_axis_g": 1.0, "alarm_sensor_rows": [99], "alarms": 1, "alarms_per_source_negative_nominal_hour": 3564.3564356435645, "evaluator_sha256": "4378d3279932ef5863e914523133ef9d0d7ace1e44898e47e4900eb3ff0a8877", "first_timestamp_ms": 0.0, "gyro_max_axis_dps": 0.0, "last_timestamp_ms": 1990.0, "message_types": {"1": 200}, "model_sha256": "0dfa37d43f8eeb55c1d51cd9f802086c7f6741b5f977336083e240d7867c9e4a", "monitored_nominal_hours": 0.00028055555555555554, "segments": 1, "sensor_rows": 200, "session": "20241106", "source_id": "1000", "source_member": "UniVrFall_Dataset/OnField/20241106/20241106_1000.csv", "source_sha256": "77fcc71192037579b46b626f661ae311fae24077c9bbca4ce92afdea2680a40e", "status": "PASS", "subject_identity_status": "unverified filename token; not a validated participant identity", "windows": 3}
+{"file": "f0.csv", "alarms": 1, "hours": 0.00028055555555555554}
+{"file": "f1.csv", "alarms": 1, "hours": 0.00028055555555555554}
+{"file": "f10.csv", "alarms": 1, "hours": 0.00028055555555555554}
+{"file": "f11.csv", "alarms": 1, "hours": 0.00028055555555555554}
+{"file": "f12.csv", "alarms": 1, "hours": 0.00028055555555555554}
+{"file": "f13.csv", "alarms": 1, "hours": 0.00028055555555555554}
+{"file": "f14.csv", "alarms": 1, "hours": 0.00028055555555555554}
+{"file": "f15.csv", "alarms": 1, "hours": 0.00028055555555555554}
+{"file": "f16.csv", "alarms": 1, "hours": 0.00028055555555555554}
+{"file": "f17.csv", "alarms": 1, "hours": 0.00028055555555555554}
+{"file": "f2.csv", "alarms": 1, "hours": 0.00028055555555555554}
+{"file": "f3.csv", "alarms": 1, "hours": 0.00028055555555555554}
+{"file": "f4.csv", "alarms": 1, "hours": 0.00028055555555555554}
+{"file": "f5.csv", "alarms": 1, "hours": 0.00028055555555555554}
+{"file": "f6.csv", "alarms": 1, "hours": 0.00028055555555555554}
+{"file": "f7.csv", "alarms": 1, "hours": 0.00028055555555555554}
+{"file": "f8.csv", "alarms": 1, "hours": 0.00028055555555555554}
+{"file": "f9.csv", "alarms": 1, "hours": 0.00028055555555555554}
+{"file": "f0.csv", "alarms": 1, "hours": 0.00028055555555555554}
+{"file": "f1.csv", "alarms": 1, "hours": 0.00028055555555555554}
+{"file": "f10.csv", "alarms": 1, "hours": 0.00028055555555555554}
+{"file": "f11.csv", "alarms": 1, "hours": 0.00028055555555555554}
+{"file": "f12.csv", "alarms": 1, "hours": 0.00028055555555555554}
+{"file": "f13.csv", "alarms": 1, "hours": 0.00028055555555555554}
+{"file": "f14.csv", "alarms": 1, "hours": 0.00028055555555555554}
+{"file": "f15.csv", "alarms": 1, "hours": 0.00028055555555555554}
+{"file": "f16.csv", "alarms": 1, "hours": 0.00028055555555555554}
+{"file": "f17.csv", "alarms": 1, "hours": 0.00028055555555555554}
+{"file": "f2.csv", "alarms": 1, "hours": 0.00028055555555555554}
+{"file": "f3.csv", "alarms": 1, "hours": 0.00028055555555555554}
+{"file": "f4.csv", "alarms": 1, "hours": 0.00028055555555555554}
+{"file": "f5.csv", "alarms": 1, "hours": 0.00028055555555555554}
+{"file": "f6.csv", "alarms": 1, "hours": 0.00028055555555555554}
+{"file": "f7.csv", "alarms": 1, "hours": 0.00028055555555555554}
+{"file": "f8.csv", "alarms": 1, "hours": 0.00028055555555555554}
+{"file": "f9.csv", "alarms": 1, "hours": 0.00028055555555555554}
+{"source_csv_files": 22, "source_rows": 8800, "source_annotation_rows": 11, "accepted_trials": 22, "quarantined_trials": 0, "accepted_rows": 8800, "valid_fall_events": 11, "annotation_errors": 0, "unmatched_annotations": 0, "quarantine_reasons": {}, "flags": {}, "clock_status": "nominal_unverified", "axes": "source_sensor_frame; hardware alignment pending"}
+{"source_csv_files": 22, "source_rows": 8800, "source_annotation_rows": 11, "accepted_trials": 22, "quarantined_trials": 0, "accepted_rows": 8800, "valid_fall_events": 11, "annotation_errors": 0, "unmatched_annotations": 0, "quarantine_reasons": {}, "flags": {}, "clock_status": "nominal_unverified", "axes": "source_sensor_frame; hardware alignment pending"}
+{"length": 100, "development": {"threshold": 0.5000000000000001, "events": 5, "detected": 0, "recall": 0.0, "false_alarms": 0, "adl_monitored_nominal_hours": 0.004180555555555555, "false_alarms_per_nominal_hour": 0.0, "median_delay_nominal_s": null, "p95_delay_nominal_s": null, "extra_alarms_in_detection_interval": 0, "early_fall_trial_alarms": 0, "late_fall_trial_alarms": 0}}
+{"length": 200, "development": {"threshold": 0.5000000000000001, "events": 5, "detected": 0, "recall": 0.0, "false_alarms": 0, "adl_monitored_nominal_hours": 0.0027916666666666667, "false_alarms_per_nominal_hour": 0.0, "median_delay_nominal_s": null, "p95_delay_nominal_s": null, "extra_alarms_in_detection_interval": 0, "early_fall_trial_alarms": 0, "late_fall_trial_alarms": 0}}
+{"length": 300, "development": {"threshold": 0.5000000000000001, "events": 5, "detected": 0, "recall": 0.0, "false_alarms": 0, "adl_monitored_nominal_hours": 0.0014027777777777777, "false_alarms_per_nominal_hour": 0.0, "median_delay_nominal_s": null, "p95_delay_nominal_s": null, "extra_alarms_in_detection_interval": 0, "early_fall_trial_alarms": 0, "late_fall_trial_alarms": 0}}
+{"selected_length": 100, "test": {"events": 6, "detected": 0, "recall": 0.0, "false_alarms": 0, "adl_monitored_nominal_hours": 0.005016666666666667, "false_alarms_per_nominal_hour": 0.0, "median_delay_nominal_s": null, "p95_delay_nominal_s": null, "extra_alarms_in_detection_interval": 0, "early_fall_trial_alarms": 0, "late_fall_trial_alarms": 0}}
+{"length": 100, "development": {"threshold": 0.5000000000000001, "events": 5, "detected": 0, "recall": 0.0, "false_alarms": 0, "adl_monitored_nominal_hours": 0.004180555555555555, "false_alarms_per_nominal_hour": 0.0, "median_delay_nominal_s": null, "p95_delay_nominal_s": null, "extra_alarms_in_detection_interval": 0, "early_fall_trial_alarms": 0, "late_fall_trial_alarms": 0}}
+{"length": 200, "development": {"threshold": 0.5000000000000001, "events": 5, "detected": 0, "recall": 0.0, "false_alarms": 0, "adl_monitored_nominal_hours": 0.0027916666666666667, "false_alarms_per_nominal_hour": 0.0, "median_delay_nominal_s": null, "p95_delay_nominal_s": null, "extra_alarms_in_detection_interval": 0, "early_fall_trial_alarms": 0, "late_fall_trial_alarms": 0}}
+{"length": 300, "development": {"threshold": 0.5000000000000001, "events": 5, "detected": 0, "recall": 0.0, "false_alarms": 0, "adl_monitored_nominal_hours": 0.0014027777777777777, "false_alarms_per_nominal_hour": 0.0, "median_delay_nominal_s": null, "p95_delay_nominal_s": null, "extra_alarms_in_detection_interval": 0, "early_fall_trial_alarms": 0, "late_fall_trial_alarms": 0}}
+{"selected_length": 100, "test": {"events": 6, "detected": 0, "recall": 0.0, "false_alarms": 0, "adl_monitored_nominal_hours": 0.005016666666666667, "false_alarms_per_nominal_hour": 0.0, "median_delay_nominal_s": null, "p95_delay_nominal_s": null, "extra_alarms_in_detection_interval": 0, "early_fall_trial_alarms": 0, "late_fall_trial_alarms": 0}}
+....................................
+----------------------------------------------------------------------
+Ran 36 tests in 13.664s
+
+OK

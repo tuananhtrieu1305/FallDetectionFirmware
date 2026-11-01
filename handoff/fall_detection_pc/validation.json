@@ -1,0 +1,94 @@
+{
+  "status": "PASS",
+  "tests": 6,
+  "coverage_percent": 97.51552795031056,
+  "feature_score_parity_atol": 1e-12,
+  "sample": {
+    "samples": 4000,
+    "windows": 79,
+    "alarms": 0
+  },
+  "standalone_smoke": "ZIP extracted, fresh Python 3.13.5 venv, pip check PASS, sklearn absent",
+  "python_3_11": "supported by dependency minimum versions; not executed locally",
+  "model_sha256": "bd42fd252ad4d6812c2c3bce703927607f367389ef476f3efa0e9645f38e96a7",
+  "dependency_audit": {
+    "dependencies": [
+      {
+        "name": "contourpy",
+        "version": "1.4.0",
+        "vulns": []
+      },
+      {
+        "name": "cycler",
+        "version": "0.12.1",
+        "vulns": []
+      },
+      {
+        "name": "fonttools",
+        "version": "4.68.0",
+        "vulns": []
+      },
+      {
+        "name": "kiwisolver",
+        "version": "1.5.1",
+        "vulns": []
+      },
+      {
+        "name": "matplotlib",
+        "version": "3.10.6",
+        "vulns": []
+      },
+      {
+        "name": "numpy",
+        "version": "2.3.3",
+        "vulns": []
+      },
+      {
+        "name": "packaging",
+        "version": "26.3",
+        "vulns": []
+      },
+      {
+        "name": "pillow",
+        "version": "13.0.0",
+        "vulns": []
+      },
+      {
+        "name": "pyparsing",
+        "version": "3.3.3",
+        "vulns": []
+      },
+      {
+        "name": "python-dateutil",
+        "version": "3.0.0",
+        "vulns": []
+      },
+      {
+        "name": "six",
+        "version": "1.17.0",
+        "vulns": []
+      },
+      {
+        "name": "tzdata",
+        "version": "2026.6",
+        "vulns": []
+      }
+    ],
+    "fixes": []
+  },
+  "installed_dependencies": [
+    "contourpy==1.4.0",
+    "cycler==0.12.1",
+    "fonttools==4.68.0",
+    "kiwisolver==1.5.1",
+    "matplotlib==3.10.6",
+    "numpy==2.3.3",
+    "packaging==26.3",
+    "pillow==13.0.0",
+    "pyparsing==3.3.3",
+    "python-dateutil==3.0.0",
+    "six==1.17.0",
+    "tzdata==2026.6"
+  ],
+  "model_and_threshold": "unchanged; no fitting or threshold selection"
+}

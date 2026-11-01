@@ -1,0 +1,17 @@
+{
+  "dataset_row":532,
+  "source_window_row":535,
+  "split":"test",
+  "label_name":"FALL",
+  "recording_id":19,
+  "trial_id":"S09T20R01",
+  "subject_id":"SA09",
+  "activity_key":"F01",
+  "partition":"test",
+  "start_row":250,
+  "end_row":349,
+  "start_frame":250,
+  "end_frame":349,
+  "y":1,
+  "quality_flags":"duplicate_host_timestamps"
+}

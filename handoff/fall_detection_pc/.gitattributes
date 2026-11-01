@@ -1,0 +1,4 @@
+# Preserve model/fixture bytes and checksums on every Git checkout.
+model.json -text whitespace=cr-at-eol
+examples/*.csv -text whitespace=cr-at-eol
+examples/*.json -text whitespace=cr-at-eol

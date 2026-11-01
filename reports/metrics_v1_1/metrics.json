@@ -1,0 +1,281 @@
+{
+  "protocol": "1.1",
+  "selection": {
+    "protocol": "1.1",
+    "threshold": 0.9967136154752128,
+    "window": 100,
+    "stride": 50,
+    "seed": 42,
+    "selection_data": "23 development subjects, frozen five-fold OOF predictions",
+    "test_used_for_selection": false,
+    "training": "Frozen baseline; no retraining",
+    "baseline_model_sha256": "8eb82f6c4c5dab916f232cc47a57139efcfb234856601767acb6995a059129ba",
+    "development_prediction_sha256": "d05aba5b127cdd09e762662c0a21c0570fed2f890db2a19f7e7e7fdb63945e13",
+    "evaluator_sha256": "ba054030d0c0b7baa171f0eb3d86774d41ff2ae481ba8971a7308eea5e961132",
+    "rule": "Recall, macro recall, fewer FA/h, lower P95 delay, lower active fraction, higher threshold; one fixed model"
+  },
+  "source_hashes": {
+    "recording_manifest.json": "9a4bcefb65eed266298b335d3feeae0b0f97fd3357414d51ef061ad8d8e837c5",
+    "selected_window_predictions.csv": "15d90b2bf04f6378223e0315c0ea8b58890218186552ac8be87b5629cfd90ece",
+    "selection_lock.json": "11069c10d8f52198f956fbca237ef8c7b2edff3ce6af5d79d2278afa3a7cf185",
+    "baseline_model.json": "8eb82f6c4c5dab916f232cc47a57139efcfb234856601767acb6995a059129ba"
+  },
+  "metrics": {
+    "development": {
+      "events": 456,
+      "detected": 444,
+      "missed": 12,
+      "recall": 0.9736842105263158,
+      "miss_rate": 0.02631578947368421,
+      "macro_recall": 0.9732731037078864,
+      "false_alarms": 1,
+      "adl_monitored_nominal_hours": 1.5187111111111111,
+      "false_alarms_per_nominal_hour": 0.6584530742442422,
+      "recall_at_0_5s": 0.9407894736842105,
+      "recall_at_1s": 0.9736842105263158,
+      "median_delay_nominal_s": 0.25,
+      "p95_delay_nominal_s": 0.48,
+      "delay_event_count": 444,
+      "preimpact_detection_fraction": 0.0518018018018018,
+      "alarm_active_fraction": 9.145181586725586e-05,
+      "longest_positive_run_nominal_s": 0.5,
+      "early_fall_trial_alarms": 0,
+      "late_fall_trial_alarms": 2,
+      "extra_alarms_in_detection_interval": 0,
+      "source_nominal_seconds": 8893.82,
+      "warmup_nominal_seconds": 906.84,
+      "excluded_gap_nominal_seconds": 0.0,
+      "gap_duration_status": "Positive missing frame/timestamp intervals excluded; negative clock resets have unknown elapsed duration",
+      "events_without_windows": 0,
+      "protocol": "1.1",
+      "threshold": 0.9967136154752128,
+      "time_basis": "nominal",
+      "window_metrics": {
+        "confusion_matrix": [
+          [
+            13273,
+            1
+          ],
+          [
+            50,
+            862
+          ]
+        ],
+        "precision": 0.9988412514484357,
+        "recall": 0.9451754385964912,
+        "f1": 0.9712676056338028,
+        "average_precision": 0.9995259016485886,
+        "fall_fraction": 0.06428873537290286,
+        "windows": 14186,
+        "ignored_windows": 2238
+      },
+      "event_binomial_95": [
+        0.9544831188711498,
+        0.9863299360646163
+      ],
+      "poisson_upper_95_per_hour": 3.1236121759324567,
+      "bootstrap_95": {
+        "recall": [
+          0.9451754385964912,
+          0.9954441913439636
+        ],
+        "recall_valid_resamples": 10000,
+        "fa_per_hour": [
+          0.0,
+          2.1494245725570544
+        ],
+        "fa_per_hour_valid_resamples": 10000,
+        "resamples": 10000,
+        "seed": 42,
+        "subjects": 23,
+        "limitation": "Conditional on frozen predictions; degenerate intervals do not prove certainty. Events correlated within subjects; binomial/Poisson assumptions are supplementary."
+      }
+    },
+    "test": {
+      "events": 117,
+      "detected": 117,
+      "missed": 0,
+      "recall": 1.0,
+      "miss_rate": 0.0,
+      "macro_recall": 1.0,
+      "false_alarms": 0,
+      "adl_monitored_nominal_hours": 0.3904694444444444,
+      "false_alarms_per_nominal_hour": 0.0,
+      "recall_at_0_5s": 0.9572649572649573,
+      "recall_at_1s": 1.0,
+      "median_delay_nominal_s": 0.24,
+      "p95_delay_nominal_s": 0.47,
+      "delay_event_count": 117,
+      "preimpact_detection_fraction": 0.07692307692307693,
+      "alarm_active_fraction": 0.0,
+      "longest_positive_run_nominal_s": 0.0,
+      "early_fall_trial_alarms": 0,
+      "late_fall_trial_alarms": 1,
+      "extra_alarms_in_detection_interval": 0,
+      "source_nominal_seconds": 2303.62,
+      "warmup_nominal_seconds": 229.68,
+      "excluded_gap_nominal_seconds": 0.0,
+      "gap_duration_status": "Positive missing frame/timestamp intervals excluded; negative clock resets have unknown elapsed duration",
+      "events_without_windows": 0,
+      "protocol": "1.1",
+      "threshold": 0.9967136154752128,
+      "time_basis": "nominal",
+      "window_metrics": {
+        "confusion_matrix": [
+          [
+            3394,
+            0
+          ],
+          [
+            5,
+            228
+          ]
+        ],
+        "precision": 1.0,
+        "recall": 0.9785407725321889,
+        "f1": 0.9891540130151844,
+        "average_precision": 0.9995992050900953,
+        "fall_fraction": 0.06424041907912875,
+        "windows": 3627,
+        "ignored_windows": 635
+      },
+      "event_binomial_95": [
+        0.9689629683068884,
+        1.0
+      ],
+      "poisson_upper_95_per_hour": 7.6721298328894445,
+      "bootstrap_95": {
+        "recall": [
+          1.0,
+          1.0
+        ],
+        "recall_valid_resamples": 10000,
+        "fa_per_hour": [
+          0.0,
+          0.0
+        ],
+        "fa_per_hour_valid_resamples": 10000,
+        "resamples": 10000,
+        "seed": 42,
+        "subjects": 6,
+        "limitation": "Conditional on frozen predictions; degenerate intervals do not prove certainty. Events correlated within subjects; binomial/Poisson assumptions are supplementary."
+      }
+    }
+  },
+  "hardware_metrics": "NOT MEASURED",
+  "limitations": [
+    "Nominal source clock",
+    "Test/OnField previously observed in baseline; fixed benchmark, not fresh final validation"
+  ],
+  "development_operating_points": {
+    "0.1": {
+      "threshold": 0.9974546719147774,
+      "recall": 0.9714912280701754,
+      "macro_recall": 0.9712027103331452,
+      "false_alarms": 0,
+      "false_alarms_per_nominal_hour": 0.0,
+      "p95_delay_nominal_s": 0.48,
+      "alarm_active_fraction": 0.0
+    },
+    "0.25": {
+      "threshold": 0.9974546719147774,
+      "recall": 0.9714912280701754,
+      "macro_recall": 0.9712027103331452,
+      "false_alarms": 0,
+      "false_alarms_per_nominal_hour": 0.0,
+      "p95_delay_nominal_s": 0.48,
+      "alarm_active_fraction": 0.0
+    },
+    "0.5": {
+      "threshold": 0.9974546719147774,
+      "recall": 0.9714912280701754,
+      "macro_recall": 0.9712027103331452,
+      "false_alarms": 0,
+      "false_alarms_per_nominal_hour": 0.0,
+      "p95_delay_nominal_s": 0.48,
+      "alarm_active_fraction": 0.0
+    },
+    "1.0": {
+      "threshold": 0.9967136154752128,
+      "recall": 0.9736842105263158,
+      "macro_recall": 0.9732731037078864,
+      "false_alarms": 1,
+      "false_alarms_per_nominal_hour": 0.6584530742442422,
+      "p95_delay_nominal_s": 0.48,
+      "alarm_active_fraction": 9.145181586725586e-05
+    },
+    "2.0": {
+      "threshold": 0.9145964794751168,
+      "recall": 0.9956140350877193,
+      "macro_recall": 0.9958592132505176,
+      "false_alarms": 2,
+      "false_alarms_per_nominal_hour": 1.3169061484884843,
+      "p95_delay_nominal_s": 0.46,
+      "alarm_active_fraction": 0.00036580726346902346
+    }
+  },
+  "legacy_parity": {
+    "pass": true,
+    "splits": [
+      {
+        "split": "development",
+        "checks": {
+          "events": true,
+          "detected": true,
+          "recall": true,
+          "false_alarms": true,
+          "adl_monitored_nominal_hours": true,
+          "false_alarms_per_nominal_hour": true,
+          "median_delay_nominal_s": true,
+          "p95_delay_nominal_s": true,
+          "early_fall_trial_alarms": true,
+          "late_fall_trial_alarms": true,
+          "extra_alarms_in_detection_interval": true
+        },
+        "legacy": {
+          "events": 456,
+          "detected": 443,
+          "recall": 0.9714912280701754,
+          "false_alarms": 0,
+          "adl_monitored_nominal_hours": 1.51871111111111,
+          "false_alarms_per_nominal_hour": 0.0,
+          "median_delay_nominal_s": 0.25,
+          "p95_delay_nominal_s": 0.48,
+          "extra_alarms_in_detection_interval": 0,
+          "early_fall_trial_alarms": 0,
+          "late_fall_trial_alarms": 2
+        }
+      },
+      {
+        "split": "test",
+        "checks": {
+          "events": true,
+          "detected": true,
+          "recall": true,
+          "false_alarms": true,
+          "adl_monitored_nominal_hours": true,
+          "false_alarms_per_nominal_hour": true,
+          "median_delay_nominal_s": true,
+          "p95_delay_nominal_s": true,
+          "early_fall_trial_alarms": true,
+          "late_fall_trial_alarms": true,
+          "extra_alarms_in_detection_interval": true
+        },
+        "legacy": {
+          "events": 117,
+          "detected": 117,
+          "recall": 1.0,
+          "false_alarms": 0,
+          "adl_monitored_nominal_hours": 0.3904694444444445,
+          "false_alarms_per_nominal_hour": 0.0,
+          "median_delay_nominal_s": 0.25,
+          "p95_delay_nominal_s": 0.47,
+          "extra_alarms_in_detection_interval": 0,
+          "early_fall_trial_alarms": 0,
+          "late_fall_trial_alarms": 0
+        }
+      }
+    ],
+    "threshold": 0.9973402932729418
+  }
+}

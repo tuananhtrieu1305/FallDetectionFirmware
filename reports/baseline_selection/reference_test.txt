@@ -1,0 +1,11 @@
+{"id": "lr_C0.1", "recall": 1.0, "fa_h": 0.0}
+{"id": "lr_C1.0", "recall": 1.0, "fa_h": 0.0}
+{"id": "lr_C10.0", "recall": 1.0, "fa_h": 0.0}
+{"id": "acc_threshold", "recall": 1.0, "fa_h": 0.0}
+STABILITY lr_C10.0 seed43
+STABILITY lr_C10.0 seed44
+.......
+----------------------------------------------------------------------
+Ran 7 tests in 3.742s
+
+OK

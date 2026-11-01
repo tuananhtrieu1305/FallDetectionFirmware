@@ -27,3 +27,5 @@ bmi270_temp/
 
 # Local archives and pre-merge backups, never source or shared test fixtures.
 /local_artifacts/
+# Local Python coverage databases
+.coverage*

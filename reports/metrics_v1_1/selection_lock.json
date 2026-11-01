@@ -1,0 +1,14 @@
+{
+  "protocol": "1.1",
+  "threshold": 0.9967136154752128,
+  "window": 100,
+  "stride": 50,
+  "seed": 42,
+  "selection_data": "23 development subjects, frozen five-fold OOF predictions",
+  "test_used_for_selection": false,
+  "training": "Frozen baseline; no retraining",
+  "baseline_model_sha256": "8eb82f6c4c5dab916f232cc47a57139efcfb234856601767acb6995a059129ba",
+  "development_prediction_sha256": "d05aba5b127cdd09e762662c0a21c0570fed2f890db2a19f7e7e7fdb63945e13",
+  "evaluator_sha256": "ba054030d0c0b7baa171f0eb3d86774d41ff2ae481ba8971a7308eea5e961132",
+  "rule": "Recall, macro recall, fewer FA/h, lower P95 delay, lower active fraction, higher threshold; one fixed model"
+}

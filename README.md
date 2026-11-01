@@ -2,6 +2,16 @@
 
 Firmware for the wearable IoT fall-detection project.
 
+## Processed AI dataset
+
+Start at [data/README.md](data/README.md). The processed dataset is available locally in `data/processed/univrfall_v1/`:
+
+- [dataset.csv](data/processed/univrfall_v1/dataset.csv): complete supervised windows, including IMU values, labels and split.
+- [One fall window](data/processed/univrfall_v1/examples/fall_window.csv): a readable 100-row, six-channel example.
+- [Loading instructions](data/processed/univrfall_v1/README.md): CSV/NPZ layout, units and preprocessing.
+
+Large generated CSV/tensor files stay out of Git; navigation and examples are tracked.
+
 ## Hardware baseline
 
 - MCU: ESP32-S3 N16R8

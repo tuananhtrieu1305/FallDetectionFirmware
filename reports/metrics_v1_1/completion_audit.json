@@ -1,0 +1,58 @@
+{
+  "status": "PASS",
+  "requirements": [
+    {
+      "requirement": "Input schema, full IGNORE sequence, invalid/missing window rejection",
+      "evidence": "metrics_v11.prepare; test_metrics_v11",
+      "status": "PASS"
+    },
+    {
+      "requirement": "Alarm runs, inclusive event matching, missing-event denominator, gaps",
+      "evidence": "metrics_v11._trials; boundary and no-window tests",
+      "status": "PASS"
+    },
+    {
+      "requirement": "Event/window metrics, macro recall, deadline recall, exposure, CI",
+      "evidence": "metrics.json; by_subject.csv; test coverage",
+      "status": "PASS"
+    },
+    {
+      "requirement": "Exact development threshold sweep and test isolation",
+      "evidence": "threshold_curve.csv; selection_lock.json; poisoned-test report test",
+      "status": "PASS"
+    },
+    {
+      "requirement": "Synthetic known-answer tests and all old tests pass",
+      "evidence": "test_output.txt: 29 tests; test_coverage.json",
+      "status": "PASS"
+    },
+    {
+      "requirement": "Real laboratory parity and all 18 OnField files/chunk checks",
+      "evidence": "verification.json; onfield/summary.json",
+      "status": "PASS"
+    },
+    {
+      "requirement": "Named report artifacts and runnable commands/API",
+      "evidence": "README.md; docs/dataset_research/METRICS_USAGE.md",
+      "status": "PASS"
+    }
+  ],
+  "automated_tests": 29,
+  "coverage_percent": 97.58308157099698,
+  "full_field_files_verified": 18,
+  "source_prediction_sha256": "15d90b2bf04f6378223e0315c0ea8b58890218186552ac8be87b5629cfd90ece",
+  "source_code_hashes": {
+    "tools\\datasets\\metrics_v11.py": "ba054030d0c0b7baa171f0eb3d86774d41ff2ae481ba8971a7308eea5e961132",
+    "tools\\datasets\\onfield_metrics_v11.py": "917f13d141635635eaabc31edc2f71b1876cddb3c6b5f52417f42a2fee175469",
+    "tools\\datasets\\run_metrics_v11.py": "925c1e037dd023d80277cf2082c65c228fee9acad699cd884ce8b9e3b6496d1f",
+    "tools\\datasets\\test_metrics_v11.py": "ddb9bf58052d027fa012fb0bea4753c884b3ec7d31fed39b89719e01f1093b49",
+    "tools\\datasets\\test_onfield_metrics_v11.py": "fc8ac94d2ce50691151d78880b32d01e555588310dc5c357c38b1f10a36f608d",
+    "tools\\datasets\\verify_metrics_v11.py": "5463fe9e3357116595f16eba7c56979da3bd5a41c5dbe1c6e58e72b88283b908"
+  },
+  "limitations": [
+    "No CNN trained",
+    "Nominal source clock",
+    "Hardware RAM/inference/transport latency NOT MEASURED",
+    "Observed test and source-negative OnField are fixed benchmarks, not fresh final validation"
+  ]
+}

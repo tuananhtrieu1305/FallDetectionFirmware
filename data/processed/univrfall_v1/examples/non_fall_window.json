@@ -1,0 +1,17 @@
+{
+  "dataset_row":0,
+  "source_window_row":0,
+  "split":"test",
+  "label_name":"NON_FALL",
+  "recording_id":0,
+  "trial_id":"S09T01R01",
+  "subject_id":"SA09",
+  "activity_key":"ADL01",
+  "partition":"test",
+  "start_row":0,
+  "end_row":99,
+  "start_frame":0,
+  "end_frame":99,
+  "y":0,
+  "quality_flags":"duplicate_host_timestamps"
+}

@@ -1,0 +1,9 @@
+{
+  "model_bytes": 3269,
+  "preprocessing_and_inference_ms_median": 0.061699989601038396,
+  "p95_ms": 0.17603999804123302,
+  "max_ms": 0.3209999995306134,
+  "platform": "Windows-11-10.0.26200-SP0",
+  "hardware_RAM": "NOT MEASURED",
+  "ESP32_latency": "NOT MEASURED"
+}

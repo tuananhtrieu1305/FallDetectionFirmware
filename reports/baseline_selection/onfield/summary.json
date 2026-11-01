@@ -1,0 +1,103 @@
+{
+  "files": 18,
+  "alarms": 30,
+  "hours": 54.88224166666666,
+  "alarms_per_source_negative_hour": 0.5466249024995791,
+  "threshold": 0.9847727596588258,
+  "threshold_retuned": false,
+  "active_fraction": 0.00016955494660866573,
+  "chunk_invariance_all_18": "PASS",
+  "label_status": "Source-negative, unverified labels and participant identity; nominal time",
+  "per_file": [
+    {
+      "source_member": "UniVrFall_Dataset/OnField/20241106/20241106_1000.csv",
+      "alarms": 22,
+      "hours": 11.45235
+    },
+    {
+      "source_member": "UniVrFall_Dataset/OnField/20241106/20241106_999.csv",
+      "alarms": 0,
+      "hours": 0.7956833333333333
+    },
+    {
+      "source_member": "UniVrFall_Dataset/OnField/20241223/20241223_1001.csv",
+      "alarms": 1,
+      "hours": 3.39055
+    },
+    {
+      "source_member": "UniVrFall_Dataset/OnField/20241223/20241223_1002.csv",
+      "alarms": 0,
+      "hours": 3.3857000000000004
+    },
+    {
+      "source_member": "UniVrFall_Dataset/OnField/20250108/20250108_1001.csv",
+      "alarms": 1,
+      "hours": 1.1434916666666668
+    },
+    {
+      "source_member": "UniVrFall_Dataset/OnField/20250108/20250108_1002.csv",
+      "alarms": 0,
+      "hours": 1.1228500000000001
+    },
+    {
+      "source_member": "UniVrFall_Dataset/OnField/20250109/20250109_1003.csv",
+      "alarms": 0,
+      "hours": 2.104433333333333
+    },
+    {
+      "source_member": "UniVrFall_Dataset/OnField/20250109/20250109_1004.csv",
+      "alarms": 0,
+      "hours": 2.0885166666666666
+    },
+    {
+      "source_member": "UniVrFall_Dataset/OnField/20250110/20250110_1005.csv",
+      "alarms": 0,
+      "hours": 2.147641666666667
+    },
+    {
+      "source_member": "UniVrFall_Dataset/OnField/20250110/20250110_1006.csv",
+      "alarms": 0,
+      "hours": 2.101475
+    },
+    {
+      "source_member": "UniVrFall_Dataset/OnField/20250115/20250115_1007.csv",
+      "alarms": 2,
+      "hours": 4.12935
+    },
+    {
+      "source_member": "UniVrFall_Dataset/OnField/20250115/20250115_1008.csv",
+      "alarms": 3,
+      "hours": 4.151891666666667
+    },
+    {
+      "source_member": "UniVrFall_Dataset/OnField/20250117/20250117_1009.csv",
+      "alarms": 0,
+      "hours": 4.386475
+    },
+    {
+      "source_member": "UniVrFall_Dataset/OnField/20250124/20250124_1005.csv",
+      "alarms": 1,
+      "hours": 3.4629749999999997
+    },
+    {
+      "source_member": "UniVrFall_Dataset/OnField/20250124/20250124_1006.csv",
+      "alarms": 0,
+      "hours": 3.5350166666666665
+    },
+    {
+      "source_member": "UniVrFall_Dataset/OnField/20250129/20250129_1003.csv",
+      "alarms": 0,
+      "hours": 2.8281
+    },
+    {
+      "source_member": "UniVrFall_Dataset/OnField/20250129/20250129_1005.csv",
+      "alarms": 0,
+      "hours": 0.9985166666666666
+    },
+    {
+      "source_member": "UniVrFall_Dataset/OnField/20250218/20250218_1010.csv",
+      "alarms": 0,
+      "hours": 1.6572250000000002
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+Vi tri deo: lung duoi (neu khac, ghi ro)
+Chieu gan: mat huong ra ngoai / chieu len tren; gui kem anh
+Tan so: 100 Hz
+Don vi: acceleration m/s2 co trong luc; gyro rad/s
+File va hoat dong da lam:
+Co nga that khong: co / khong / khong chac
+Moc onset/impact dung clock timestamp_us cua CSV; neu chua biet thi de trong.
+Bat thuong: mat mau, lech thiet bi, chinh day...
