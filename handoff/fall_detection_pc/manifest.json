@@ -1,0 +1,10 @@
+{
+  "model_id": "lr_C0.1",
+  "model_sha256": "bd42fd252ad4d6812c2c3bce703927607f367389ef476f3efa0e9645f38e96a7",
+  "source": "reports/baseline_selection/selected_model.json",
+  "source_commit": "70cc487",
+  "window_samples": 100,
+  "stride_samples": 50,
+  "nominal_hz": 100,
+  "feature_order": "mean,std(ddof=0),min,max,rms; each over ax,ay,az,gx,gy,gz,acc_norm,gyro_norm"
+}
