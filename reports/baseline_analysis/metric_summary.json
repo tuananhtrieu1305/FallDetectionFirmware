@@ -1,0 +1,85 @@
+[
+  {
+    "dataset": "development OOF",
+    "events": 456,
+    "detected": 449,
+    "missed": 7,
+    "event_recall": 0.9846491228070176,
+    "macro_recall": 0.9836250705815924,
+    "window_precision": 0.9988505747126437,
+    "window_recall": 0.9528508771929824,
+    "window_f1": 0.9753086419753086,
+    "window_AP": 0.999354191070553,
+    "window_fall_fraction": 0.06428873537290286,
+    "false_alarms": 1,
+    "adl_hours": 1.5187111111111111,
+    "fa_per_hour": 0.6584530742442422,
+    "delay_median_nominal_s": 0.24,
+    "delay_p95_nominal_s": 0.48599999999999965,
+    "recall_at_0_5s": 0.9473684210526315,
+    "alarm_active_fraction": 9.145181586725586e-05,
+    "early": 0,
+    "late": 0,
+    "repeats": 0,
+    "recall_bootstrap_95": [
+      0.9634695831492119,
+      0.9978586723768736
+    ],
+    "fa_bootstrap_95": [
+      0.0,
+      2.086541562666118
+    ],
+    "event_binomial_95": [
+      0.9686282542796186,
+      0.9938064557381131
+    ],
+    "fa_poisson_upper95": 3.1236121759324567
+  },
+  {
+    "dataset": "fixed test",
+    "events": 117,
+    "detected": 117,
+    "missed": 0,
+    "event_recall": 1.0,
+    "macro_recall": 1.0,
+    "window_precision": 1.0,
+    "window_recall": 0.9828326180257511,
+    "window_f1": 0.9913419913419913,
+    "window_AP": 0.999756737502389,
+    "window_fall_fraction": 0.06424041907912875,
+    "false_alarms": 0,
+    "adl_hours": 0.3904694444444444,
+    "fa_per_hour": 0.0,
+    "delay_median_nominal_s": 0.24,
+    "delay_p95_nominal_s": 0.47,
+    "recall_at_0_5s": 0.9658119658119658,
+    "alarm_active_fraction": 0.0,
+    "early": 0,
+    "late": 0,
+    "repeats": 0,
+    "recall_bootstrap_95": [
+      1.0,
+      1.0
+    ],
+    "fa_bootstrap_95": [
+      0.0,
+      0.0
+    ],
+    "event_binomial_95": [
+      0.9689629683068884,
+      1.0
+    ],
+    "fa_poisson_upper95": 7.6721298328894445
+  },
+  {
+    "dataset": "OnField source-negative",
+    "events": null,
+    "event_recall": null,
+    "window_precision": null,
+    "false_alarms": 30,
+    "adl_hours": 54.88224166666666,
+    "fa_per_hour": 0.5466249024995791,
+    "fa_poisson_upper95": 0.7414148248824791,
+    "alarm_active_fraction": 0.00016955494660866573
+  }
+]

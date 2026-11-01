@@ -22,3 +22,4 @@ python tools/datasets/export_dataset.py --source 'C:/Users/Admin/.codex/visualiz
 ```
 
 - [Phân tích dữ liệu và lựa chọn baseline](../reports/baseline_selection/README.md)
+- [Phân tích lỗi baseline và hướng làm tiếp theo](../reports/baseline_analysis/README.md)

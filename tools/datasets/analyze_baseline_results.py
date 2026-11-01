@@ -315,6 +315,10 @@ python tools/datasets/analyze_baseline_results.py
 python -m unittest discover -s tools/datasets -p 'test_analyze_baseline_results.py'
 ```
 
+Lượt nghiệm thu đã lưu test log/coverage và dependency audit tại đây.
+Đối chiếu độc lập sau khi tạo báo cáo: `python tools/datasets/verify_result_analysis.py`.
+Verifier yêu cầu test log/coverage và audit hiện có; nếu chạy lại test hoặc audit thì chạy verifier sau cùng để cập nhật hash.
+
 Script lấy đường dẫn nguồn từ manifest dataset và chỉ đọc report/prediction đã lưu.
 Không train lại, không đổi model/threshold. Metric chưa xác định ghi N/A/null.
 CSV score phải đọc với float_precision=round_trip để giữ nguyên quyết định ở threshold trùng score.
