@@ -15,8 +15,15 @@
 #include "bmp3.h"
 #include "alert_manager.h"
 #include "sensor_manager.h"
+#include "sensor_bus.h"
 #include "gnss_manager.h"
 #include "lte_manager.h"
+#include "wifi_manager.h"
+#include "mqtt_manager.h"
+#include "device_telemetry.h"
+#include "command_processor.h"
+#include "device_clock.h"
+#include "network_config.h"
 
 /* PHASE 4 wiring and driver interface are intentionally preserved. */
 #define I2C_SDA_GPIO 8
@@ -464,7 +471,7 @@ void app_main(void)
         NULL;
 
     err =
-        i2c_new_master_bus(
+        sensor_bus_create(
             &bus_config,
             &bus_handle
         );
@@ -786,6 +793,51 @@ void app_main(void)
         "Vibration and buzzer OFF for clean acquisition"
     );
 
+    /* Complete boot-only NVS/PHY/radio preparation BEFORE starting the 10 ms
+     * acquisition timer. Association/DHCP/reconnect remain in the Wi-Fi worker;
+     * no AP is required to reach sensor_manager_start().
+     */
+#if LTE_DIAG_SKIP_WIFI
+    ESP_LOGW("LTE", "Wi-Fi intentionally skipped for selected LTE diagnostic this boot; "
+             "normal startup remains available when diagnostic isolation is disabled");
+#else
+    const wifi_manager_config_t wifi_config = {
+        .ssid = NETWORK_WIFI_SSID,
+        .password = NETWORK_WIFI_PASSWORD,
+    };
+    err = wifi_manager_start(&wifi_config);
+    bool wifi_prepared = err == ESP_OK;
+    if (err == ESP_ERR_NOT_FOUND)
+    {
+        ESP_LOGW("WIFI_MANAGER", "Wi-Fi disabled: configure main/network_config.local.h locally");
+    }
+    else if (err != ESP_OK)
+    {
+        ESP_LOGE("WIFI_MANAGER", "start failed: %s; sensor startup continues", esp_err_to_name(err));
+    }
+    const mqtt_manager_config_t mqtt_config = {
+        .broker_uri = NETWORK_MQTT_BROKER_URI,
+        .device_id = NETWORK_MQTT_DEVICE_ID,
+        .username = NETWORK_MQTT_USERNAME,
+        .password = NETWORK_MQTT_PASSWORD,
+        .server_certificate = NETWORK_MQTT_SERVER_CERT_PEM,
+    };
+    err = mqtt_manager_start(&mqtt_config);
+    if (err == ESP_ERR_NOT_FOUND)
+    {
+        ESP_LOGW("MQTT_MANAGER", "disabled: set broker URI in ignored network_config.local.h");
+    }
+    else if (err != ESP_OK)
+    {
+        ESP_LOGE("MQTT_MANAGER", "start failed: %s; sensor startup continues", esp_err_to_name(err));
+    }
+    command_processor_init(NETWORK_COMMANDS_ENABLED != 0);
+    if (NETWORK_COMMANDS_ENABLED && wifi_prepared) {
+        err = device_clock_init(NETWORK_TIME_SERVER);
+        if (err != ESP_OK) ESP_LOGE("DEVICE_CLOCK", "init failed: %s; commands require UTC", esp_err_to_name(err));
+    }
+#endif
+
     err = sensor_manager_start(&bmi, &bmp);
 
     if (err != ESP_OK)
@@ -832,7 +884,7 @@ void app_main(void)
     }
 
     /* =====================================================
-     * PHASE 7 - A7670C LTE UART2 AT bring-up
+     * Selected LTE diagnostic (exclusive owner of GPIO17/18)
      * ===================================================== */
 
     err = lte_manager_start();
@@ -849,9 +901,37 @@ void app_main(void)
     {
         ESP_LOGI(
             TAG,
-            "LTE AT task started on UART2 / TX17 / RX18"
+            "LTE diagnostic task scheduled; see LTE mode/init/result logs"
         );
     }
+
+    /* Independent, one-shot GPIO6 PWM diagnostic. GPIO5 automatic diagnostic
+     * is disabled so the two actuators cannot run together.
+     */
+#if LTE_UART_AT_DIAG
+    ESP_LOGI("LTE", "Phase 11.11: automatic buzzer test skipped; motor test already disabled");
+#else
+    err = buzzer_gpio6_diag_start();
+    if (err != ESP_OK)
+    {
+        ESP_LOGE(
+            "BUZZER_GPIO6_DIAG",
+            "start failed: %s; OFF cleanup attempted, other tasks continue",
+            esp_err_to_name(err)
+        );
+    }
+#endif
+
+    /* Publisher never runs in Sensor Task or MQTT callback. GNSS and the
+     * actuator driver are initialized before read-only snapshots are used.
+     */
+#if !LTE_DIAG_SKIP_WIFI
+    err = device_telemetry_start(NETWORK_MQTT_DEVICE_ID,
+                                 NETWORK_TEST_ALERT_SERIAL_ENABLED != 0);
+    if (err != ESP_OK) {
+        ESP_LOGE("DEVICE_TELEMETRY", "start failed: %s; sensor continues", esp_err_to_name(err));
+    }
+#endif
 
     /* =====================================================
      * Main task idle loop
@@ -864,8 +944,16 @@ void app_main(void)
 
     while (1)
     {
+        /*
+         * GPIO4 diagnostic only. Discard the debounced event so a test press
+         * cannot trigger alert, actuator, MQTT, or emergency behavior.
+         * The main task is low priority; 20 ms polling supports the existing
+         * 40 ms debounce without changing Sensor Manager timing.
+         */
+        (void)button_pressed();
+
         vTaskDelay(
-            pdMS_TO_TICKS(1000)
+            pdMS_TO_TICKS(20)
         );
     }
 }

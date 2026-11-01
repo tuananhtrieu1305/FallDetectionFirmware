@@ -27,6 +27,7 @@
  */
 #define SENSOR_TASK_STACK_BYTES   6144U
 #define SENSOR_TASK_PRIORITY      12U
+#define SENSOR_TASK_CORE          1
 #define LOGGER_TASK_STACK_BYTES   4096U
 #define LOGGER_TASK_PRIORITY      4U
 #define DIAG_QUEUE_LENGTH         32U
@@ -603,8 +604,12 @@ esp_err_t sensor_manager_start(struct bmi2_dev *bmi, struct bmp3_dev *bmp)
         free_event_buffers();
         return ESP_ERR_NO_MEM;
     }
-    ret = xTaskCreate(sensor_task, "sensor_task", SENSOR_TASK_STACK_BYTES,
-                      NULL, SENSOR_TASK_PRIORITY, &s_task);
+    /* ESP-IDF Wi-Fi runs on core 0 in this ESP32-S3 configuration. Keep the
+     * hard 100 Hz I2C acquisition on core 1 so radio loss/reconnect work cannot
+     * accumulate timer notifications. Logger remains low priority/unpinned.
+     */
+    ret = xTaskCreatePinnedToCore(sensor_task, "sensor_task", SENSOR_TASK_STACK_BYTES,
+                      NULL, SENSOR_TASK_PRIORITY, &s_task, SENSOR_TASK_CORE);
     if (ret != pdPASS) {
         s_task = NULL;
         vTaskDelete(s_logger_task);
@@ -626,8 +631,9 @@ esp_err_t sensor_manager_start(struct bmi2_dev *bmi, struct bmp3_dev *bmp)
     err = esp_timer_start_periodic(s_timer, SENSOR_PERIOD_US);
     if (err != ESP_OK) goto fail;
 
-    ESP_LOGI(TAG, "esp_timer started: period=%u us; BMP3 every 4 ticks; logger task split",
-             (unsigned)SENSOR_PERIOD_US);
+    ESP_LOGI(TAG, "esp_timer started: period=%u us; sensor core=%u; "
+             "BMP3 every 4 ticks; logger task split",
+             (unsigned)SENSOR_PERIOD_US, (unsigned)SENSOR_TASK_CORE);
     return ESP_OK;
 
 fail:

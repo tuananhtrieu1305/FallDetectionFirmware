@@ -1,5 +1,12 @@
 # App/Web Handoff — IoT Fall Detection
 
+Cập nhật Phase8.2.7 (2026-10-31): firmware Wi-Fi/MQTT thật đã được kiểm thử tới
+broker; Backend/App E2E chưa xác minh vì chưa có hệ thống Member3. Đọc
+[test plan thiết bị thật](PHASE8_2_7_END_TO_END_INTEGRATION.md) và
+[real ACK/TTL demo](PHASE8_2_5_DEMO_COMMAND_CONTRACT.md) trước tích hợp. Các bước
+mock/ACK_SIMULATED bên dưới thuộc bàn giao Phase8.1, không thay bằng chứng ESP32
+thực thi STOP hoặc E2E thật. Không chạy mock cùng deviceID với board thật.
+
 ## 1. Giới thiệu
 
 Dự án xây dựng thiết bị đeo vùng bụng/eo để phát hiện

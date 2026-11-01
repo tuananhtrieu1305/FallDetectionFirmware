@@ -1,0 +1,29 @@
+{
+  "phase": "8.2.7",
+  "purpose": "Manual evidence index; filling this file does not automatically certify E2E",
+  "deviceId": "waist-esp32s3-001",
+  "contract": "mqtt-v1 + PHASE8_2_5_DEMO_COMMAND_CONTRACT",
+  "runId": null,
+  "firmwareElfSha256": null,
+  "backendRevision": null,
+  "appOrWebRevision": null,
+  "member3ReviewedDemoAckAndTestSafety": false,
+  "eventId": null,
+  "commandId": null,
+  "stages": {
+    "real_device_status_and_event_at_broker": {"status": "NOT_TESTED", "evidence": []},
+    "spring_boot_validates_same_test_event": {"status": "NOT_TESTED", "evidence": []},
+    "persistence_and_event_dedup_if_implemented": {"status": "NOT_TESTED", "evidence": []},
+    "android_or_web_displays_same_test_event": {"status": "NOT_TESTED", "evidence": []},
+    "authorized_app_request_to_backend": {"status": "NOT_TESTED", "evidence": []},
+    "backend_publishes_fresh_correlated_command": {"status": "NOT_TESTED", "evidence": []},
+    "device_stops_buzzer_and_publishes_real_ack": {"status": "NOT_TESTED", "evidence": []},
+    "backend_consumes_and_correlates_real_ack": {"status": "NOT_TESTED", "evidence": []},
+    "android_or_web_displays_real_ack": {"status": "NOT_TESTED", "evidence": []},
+    "test_event_does_not_escalate_to_real_rescue": {"status": "NOT_TESTED", "evidence": []}
+  },
+  "missing_or_not_applicable_with_reason": [],
+  "reviewer": null,
+  "reviewedAtUtc": null,
+  "endToEndVerdict": "NOT_VERIFIED"
+}

@@ -2,6 +2,11 @@
 
 Status: PHASE 8.1 development contract.
 
+Phase 8.2.5 demo-only extension (user approved 2026-10-31):
+[Real STOP_BUZZER ACK / TTL profile](PHASE8_2_5_DEMO_COMMAND_CONTRACT.md).
+Backend/Member 3 adoption is pending. The original mock contract below remains
+unchanged; ACK_SIMULATED must never stand for ESP32 execution.
+
 LTE hardware is NOT READY. Backend/App/Web development
 can proceed using the MQTT mock device.
 

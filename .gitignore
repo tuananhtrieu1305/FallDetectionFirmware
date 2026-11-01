@@ -16,3 +16,14 @@ Thumbs.db
 .vscode/settings.json
 
 bmi270_temp/
+
+# Local network credentials; keep the example template versioned.
+/main/network_config.local.h
+
+# Local hardware recordings/evidence; reviewed format samples live in docs/.
+/captures/
+/log.fall_detection_firmware.*.txt
+/sensor_csv_verified_*.txt
+
+# Local archives and pre-merge backups, never source or shared test fixtures.
+/local_artifacts/

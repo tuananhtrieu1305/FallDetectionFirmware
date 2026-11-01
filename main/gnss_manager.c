@@ -10,8 +10,10 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/semphr.h"
+#include "freertos/queue.h"
 
 #include "driver/uart.h"
+#include "soc/uart_reg.h"
 #include "esp_err.h"
 #include "esp_log.h"
 #include "esp_timer.h"
@@ -48,8 +50,11 @@
 // No fresh RMC fix for 3 seconds -> LAST_KNOWN
 #define GNSS_FIX_STALE_US          3000000LL
 
-// Change to 1 only for raw NMEA troubleshooting
-#define GNSS_RAW_PRINT             0
+// Temporary live-UART diagnostic; set to 0 and rebuild to disable.
+#define GNSS_RAW_DIAGNOSTIC        1
+#define GNSS_RAW_SAMPLE_SIZE       128
+#define GNSS_RAW_LOG_ROW_SIZE      32
+#define GNSS_UART_EVENT_QUEUE_SIZE 32
 
 static const char *TAG = "GNSS";
 
@@ -74,6 +79,7 @@ static gnss_state_t s_state;
 static SemaphoreHandle_t s_state_mutex = NULL;
 
 static bool s_started = false;
+static QueueHandle_t s_uart_events = NULL;
 
 /* =========================================================
  * Numeric helpers
@@ -857,6 +863,158 @@ esp_err_t gnss_manager_get_snapshot(
 }
 
 /* =========================================================
+ * Bounded diagnostics, owned exclusively by the GNSS task.
+ * Sample bytes before any NMEA filtering; never read UART here.
+ * All counters below cover one status interval, not lifetime totals.
+ * ========================================================= */
+
+typedef struct {
+    uint8_t raw[GNSS_RAW_SAMPLE_SIZE];
+    size_t raw_used;
+    uint32_t rx_bytes;
+    uint32_t read_errors;
+    uint32_t frame_errors;
+    uint32_t fifo_overflows;
+    uint32_t buffer_full;
+    uint32_t parity_errors;
+    uint32_t breaks;
+    uint32_t queue_at_capacity;
+    uint32_t lines;
+    uint32_t invalid_nmea;
+    uint32_t invalid_fields;
+    uint32_t ignored_messages;
+    uint32_t mutex_skips;
+    uint32_t resyncs;
+    uint32_t nonprint_aborts;
+    uint32_t overlong_aborts;
+    uint32_t outside_sentence;
+} gnss_rx_diag_t;
+
+static void collect_uart_events(gnss_rx_diag_t *diag)
+{
+    // Observe metadata only. Do not flush RX or reset the parser on errors.
+    UBaseType_t pending = uxQueueMessagesWaiting(s_uart_events);
+    if (pending == GNSS_UART_EVENT_QUEUE_SIZE) {
+        ++diag->queue_at_capacity;
+    }
+
+    uart_event_t event;
+    for (UBaseType_t i = 0; i < pending; ++i) {
+        if (xQueueReceive(s_uart_events, &event, 0) != pdTRUE) {
+            break;
+        }
+        switch (event.type) {
+        case UART_FRAME_ERR:   ++diag->frame_errors; break;
+        case UART_FIFO_OVF:    ++diag->fifo_overflows; break;
+        case UART_BUFFER_FULL: ++diag->buffer_full; break;
+        case UART_PARITY_ERR:  ++diag->parity_errors; break;
+        case UART_BREAK:       ++diag->breaks; break;
+        default: break; // UART_DATA is already consumed by uart_read_bytes().
+        }
+    }
+}
+
+static void diagnose_rejected_nmea(
+    const char *sentence,
+    gnss_rx_diag_t *diag)
+{
+    // Reuse validation only for diagnostics after apply_nmea returned false.
+    // Neither the parser nor the location state is modified here.
+    char payload[GNSS_LINE_SIZE];
+    char *fields[24];
+    if (!verified_payload(sentence, payload, sizeof(payload))) {
+        ++diag->invalid_nmea;
+        return;
+    }
+    size_t count = split_fields(payload, fields, 24);
+    if (count == 0 || strlen(fields[0]) != 5 ||
+        strcmp(fields[0] + 2, "RMC") == 0 ||
+        strcmp(fields[0] + 2, "GGA") == 0) {
+        ++diag->invalid_fields;
+    } else {
+        ++diag->ignored_messages;
+    }
+}
+
+static void report_rx_diagnostics(const gnss_rx_diag_t *diag)
+{
+    static const char hex_digits[] = "0123456789ABCDEF";
+
+    ESP_LOGI(TAG, "RAW_RX window: rx=%" PRIu32 " sampled=%u suppressed=%" PRIu32
+             " (first <=128 UART bytes / >=5s)",
+             diag->rx_bytes, (unsigned int)diag->raw_used,
+             diag->rx_bytes - (uint32_t)diag->raw_used);
+
+    // Small fixed buffers keep the existing 4096-byte task stack bounded.
+    for (size_t offset = 0; offset < diag->raw_used;
+         offset += GNSS_RAW_LOG_ROW_SIZE) {
+        char ascii[GNSS_RAW_LOG_ROW_SIZE * 4 + 1];
+        char hex[GNSS_RAW_LOG_ROW_SIZE * 3 + 1];
+        size_t ascii_used = 0;
+        size_t hex_used = 0;
+        size_t length = diag->raw_used - offset;
+        if (length > GNSS_RAW_LOG_ROW_SIZE) {
+            length = GNSS_RAW_LOG_ROW_SIZE;
+        }
+        bool nonprint = false;
+        for (size_t i = 0; i < length; ++i) {
+            uint8_t byte = diag->raw[offset + i];
+            hex[hex_used++] = hex_digits[byte >> 4];
+            hex[hex_used++] = hex_digits[byte & 0x0f];
+            hex[hex_used++] = ' ';
+            if (byte >= 32 && byte <= 126) {
+                // Escape backslash so literal text cannot mimic an escaped byte.
+                if (byte == '\\') {
+                    ascii[ascii_used++] = '\\';
+                }
+                ascii[ascii_used++] = (char)byte;
+            } else {
+                nonprint = true;
+                ascii[ascii_used++] = '\\';
+                if (byte == '\r' || byte == '\n' || byte == '\t') {
+                    ascii[ascii_used++] = byte == '\r' ? 'r' :
+                                          byte == '\n' ? 'n' : 't';
+                } else {
+                    ascii[ascii_used++] = 'x';
+                    ascii[ascii_used++] = hex_digits[byte >> 4];
+                    ascii[ascii_used++] = hex_digits[byte & 0x0f];
+                }
+            }
+        }
+        ascii[ascii_used] = '\0';
+        hex[hex_used] = '\0';
+        ESP_LOGI(TAG, "RAW_RX ASCII +%03u len=%u: %s",
+                 (unsigned int)offset, (unsigned int)length, ascii);
+        if (nonprint) {
+            ESP_LOGI(TAG, "RAW_RX HEX   +%03u len=%u: %s",
+                     (unsigned int)offset, (unsigned int)length, hex);
+        }
+    }
+
+    esp_log_level_t level =
+        (diag->frame_errors || diag->fifo_overflows || diag->buffer_full ||
+         diag->parity_errors || diag->breaks || diag->read_errors ||
+         diag->queue_at_capacity) ? ESP_LOG_WARN : ESP_LOG_INFO;
+    ESP_LOG_LEVEL(level, TAG,
+        "UART_RX_DIAG: frame=%" PRIu32 " fifo_ovf=%" PRIu32
+        " buffer_full=%" PRIu32 " parity=%" PRIu32 " break=%" PRIu32
+        " read_err=%" PRIu32 " queue_at_capacity=%" PRIu32
+        " (observed events; queue saturation may lose events)",
+        diag->frame_errors, diag->fifo_overflows, diag->buffer_full,
+        diag->parity_errors, diag->breaks, diag->read_errors,
+        diag->queue_at_capacity);
+    ESP_LOGI(TAG,
+        "NMEA_RX_DIAG: lines=%" PRIu32 " checksum_or_syntax=%" PRIu32
+        " fields_or_header=%" PRIu32 " ignored_other=%" PRIu32
+        " mutex_skip=%" PRIu32 " resync=%" PRIu32
+        " nonprint_abort=%" PRIu32 " overlong_abort=%" PRIu32
+        " outside_sentence_bytes=%" PRIu32,
+        diag->lines, diag->invalid_nmea, diag->invalid_fields,
+        diag->ignored_messages, diag->mutex_skips, diag->resyncs,
+        diag->nonprint_aborts, diag->overlong_aborts, diag->outside_sentence);
+}
+
+/* =========================================================
  * Real GNSS UART task
  * ========================================================= */
 
@@ -872,6 +1030,7 @@ static void gnss_task(void *arg)
 
     uint32_t total_bytes = 0;
     uint32_t parsed = 0;
+    gnss_rx_diag_t diag = {0};
 
     TickType_t last_report =
         xTaskGetTickCount();
@@ -880,6 +1039,10 @@ static void gnss_task(void *arg)
         TAG,
         "UART1 RX GPIO15 / 9600; listening for live NMEA"
     );
+    if (GNSS_RAW_DIAGNOSTIC) {
+        ESP_LOGI(TAG, "GNSS RAW RX DIAGNOSTIC ON: <=128 real UART bytes / 5s; "
+                 "ASCII escaped, HEX for rows containing nonprintable bytes");
+    }
 
     while (true) {
         int received = uart_read_bytes(
@@ -889,13 +1052,32 @@ static void gnss_task(void *arg)
             pdMS_TO_TICKS(GNSS_READ_TIMEOUT_MS)
         );
 
+        if (GNSS_RAW_DIAGNOSTIC) {
+            collect_uart_events(&diag);
+            if (received < 0) {
+                ++diag.read_errors;
+            }
+        }
+
         if (received > 0) {
             total_bytes += (uint32_t)received;
+            if (GNSS_RAW_DIAGNOSTIC) {
+                diag.rx_bytes += (uint32_t)received;
+                size_t sample_length = sizeof(diag.raw) - diag.raw_used;
+                if (sample_length > (size_t)received) {
+                    sample_length = (size_t)received;
+                }
+                memcpy(diag.raw + diag.raw_used, chunk, sample_length);
+                diag.raw_used += sample_length;
+            }
 
             for (int i = 0; i < received; ++i) {
                 char c = (char)chunk[i];
 
                 if (c == '$') {
+                    if (GNSS_RAW_DIAGNOSTIC && collecting) {
+                        ++diag.resyncs;
+                    }
                     collecting = true;
                     used = 0;
                     sentence[used++] = c;
@@ -905,6 +1087,9 @@ static void gnss_task(void *arg)
 
                 } else if (collecting && c == '\n') {
                     sentence[used] = '\0';
+                    if (GNSS_RAW_DIAGNOSTIC) {
+                        ++diag.lines;
+                    }
 
                     bool applied = false;
 
@@ -919,21 +1104,15 @@ static void gnss_task(void *arg)
                         );
 
                         xSemaphoreGive(s_state_mutex);
+                        if (GNSS_RAW_DIAGNOSTIC && !applied) {
+                            diagnose_rejected_nmea(sentence, &diag);
+                        }
+                    } else if (GNSS_RAW_DIAGNOSTIC) {
+                        ++diag.mutex_skips;
                     }
 
                     if (applied) {
                         ++parsed;
-                    }
-
-                    if (GNSS_RAW_PRINT &&
-                        (strstr(sentence, "RMC,") ||
-                         strstr(sentence, "GGA,"))) {
-
-                        ESP_LOGI(
-                            TAG,
-                            "RAW_NMEA: %s",
-                            sentence
-                        );
                     }
 
                     collecting = false;
@@ -947,6 +1126,15 @@ static void gnss_task(void *arg)
                     sentence[used++] = c;
 
                 } else {
+                    if (GNSS_RAW_DIAGNOSTIC) {
+                        if (!collecting) {
+                            ++diag.outside_sentence;
+                        } else if (c >= 32 && c <= 126) {
+                            ++diag.overlong_aborts;
+                        } else {
+                            ++diag.nonprint_aborts;
+                        }
+                    }
                     collecting = false;
                     used = 0;
                 }
@@ -1006,7 +1194,12 @@ static void gnss_task(void *arg)
                 parsed
             );
 
-            last_report = now;
+            if (GNSS_RAW_DIAGNOSTIC) {
+                report_rx_diagnostics(&diag);
+                memset(&diag, 0, sizeof(diag));
+            }
+            // Space diagnostic bursts >=5 seconds apart, including log time.
+            last_report = GNSS_RAW_DIAGNOSTIC ? xTaskGetTickCount() : now;
         }
     }
 }
@@ -1065,8 +1258,8 @@ esp_err_t gnss_manager_start(void)
             GNSS_UART,
             GNSS_RX_BUFFER_SIZE,
             0,
-            0,
-            NULL,
+            GNSS_RAW_DIAGNOSTIC ? GNSS_UART_EVENT_QUEUE_SIZE : 0,
+            GNSS_RAW_DIAGNOSTIC ? &s_uart_events : NULL,
             0
         );
     }
@@ -1091,6 +1284,12 @@ esp_err_t gnss_manager_start(void)
         UART_PIN_NO_CHANGE,
         UART_PIN_NO_CHANGE
     );
+
+    if (err == ESP_OK && GNSS_RAW_DIAGNOSTIC) {
+        // IDF v5.5.5 defaults enable overflow/parity/break, but not framing.
+        // Add only the framing interrupt; keep RX thresholds/config unchanged.
+        err = uart_enable_intr_mask(GNSS_UART, UART_FRM_ERR_INT_ENA_M);
+    }
 
     if (err != ESP_OK) {
         uart_driver_delete(GNSS_UART);
