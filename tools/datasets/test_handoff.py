@@ -6,6 +6,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 import numpy as np
 
@@ -29,7 +30,8 @@ class HandoffTest(unittest.TestCase):
         model = json.loads((ROOT / 'reports/baseline_selection/selected_model.json').read_text())
         np.testing.assert_allclose(p.features(x), features(x), rtol=0, atol=1e-12)
         np.testing.assert_allclose(p.score(model, p.features(x)), portable_predict(model, features(x)), rtol=0, atol=1e-12)
-        self.assertEqual((PACKAGE / 'model.json').read_bytes(), (ROOT / 'reports/baseline_selection/selected_model.json').read_bytes())
+        self.assertEqual(json.loads((PACKAGE / 'model.json').read_text()), model)
+        self.assertEqual(p.sha(PACKAGE / 'model.json'), json.loads((PACKAGE / 'manifest.json').read_text())['model_sha256'])
 
     def test_alarm_edges(self):
         p = self.load()
@@ -65,6 +67,7 @@ class HandoffTest(unittest.TestCase):
             self.assertEqual(result['windows'], 0)
             write(times, bad=True)
             with self.assertRaises(ValueError): p.read_input(path)
+
             write([0, 0])
             with self.assertRaises(ValueError): p.read_input(path)
             write(np.arange(200) * 20000)
@@ -78,6 +81,59 @@ class HandoffTest(unittest.TestCase):
             self.assertEqual(p.run(path, Path(td) / 'timegap')['segments'], 2)
             path.write_text('ax,ay\n1,2\n')
             with self.assertRaises(ValueError): p.read_input(path)
+
+    def test_package_allowlist_and_integrity(self):
+        p = self.load()
+        spec = importlib.util.spec_from_file_location('handoff_package', PACKAGE / 'package.py')
+        pack = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(pack)
+        import shutil
+        import zipfile
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            for name in pack.FILES:
+                target = root / name
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(PACKAGE / name, target)
+            with patch.object(pack, 'HERE', root):
+                archive = pack.build()
+                with zipfile.ZipFile(archive) as z:
+                    self.assertEqual(set(z.namelist()), {'fall_detection_pc/' + n for n in pack.FILES})
+                (root / 'model.json').write_text('{}')
+                with patch.object(p, 'HERE', root):
+                    with self.assertRaisesRegex(ValueError, 'checksum'):
+                        p.run(ROOT / 'docs/sensor_sample_4000.csv', root / 'out')
+                (root / 'model.json').unlink()
+                with self.assertRaises(FileNotFoundError): pack.build()
+
+    def test_reset_and_cli_errors(self):
+        p = self.load()
+        with tempfile.TemporaryDirectory() as td:
+            import csv
+            root = Path(td)
+            path = root / 'input.csv'
+            with path.open('w', newline='') as stream:
+                w = csv.writer(stream)
+                w.writerow(['timestamp_us'] + p.CHANNELS + ['seq'])
+                for i in range(250):
+                    w.writerow([i*10000, 0,0,9.8,0,0,0, i if i < 150 else i+1])
+            with patch.object(p, 'score', side_effect=lambda m, f: np.ones(len(f))):
+                result = p.run(path, root / 'out')
+                self.assertEqual(result['alarms'], 2)
+                self.assertEqual(result['windows'], 3)
+            with patch.object(sys, 'argv', ['predict.py','--input',str(path),'--output',str(root / 'cli')]):
+                self.assertEqual(p.main(), 0)
+            path.write_text('timestamp_us,ax,ay,az,gx,gy,gz\n')
+            with self.assertRaisesRegex(ValueError, 'no samples'): p.read_input(path)
+            path.write_text('timestamp_us,ax,ay,az,gx,gy,gz\n0,no,0,0,0,0,0\n')
+            with self.assertRaisesRegex(ValueError, 'numeric'): p.read_input(path)
+            path.write_text('timestamp_us,ax,ay,az,gx,gy,gz,ax\n')
+            with self.assertRaisesRegex(ValueError, 'Duplicate'): p.read_input(path)
+            with patch.object(sys, 'argv', ['predict.py','--input',str(path),'--output',str(root)]):
+                self.assertEqual(p.main(), 2)
+            with self.assertRaisesRegex(ValueError, 'overwrite'):
+                p.run(root / 'predictions.csv', root)
+
 
 
 if __name__ == '__main__':
